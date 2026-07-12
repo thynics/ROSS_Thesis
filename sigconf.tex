@@ -1,847 +1,393 @@
-%%
-%% This is file `sigconf.tex',
-%% generated with the docstrip utility.
-%%
-%% The original source files were:
-%%
-%% samples.dtx  (with options: `all,proceedings,sigconf')
-%% 
-%% IMPORTANT NOTICE:
-%% 
-%% For the copyright see the source file.
-%% 
-%% Any modified versions of this file must be renamed
-%% with new filenames distinct from sigconf.tex.
-%% 
-%% For distribution of the original source see the terms
-%% for copying and modification in the file samples.dtx.
-%% 
-%% This generated file may be distributed as long as the
-%% original source files, as listed above, are part of the
-%% same distribution. (The sources need not necessarily be
-%% in the same archive or directory.)
-%%
-%%
-%% Commands for TeXCount
-%TC:macro \cite [option:text,text]
-%TC:macro \citep [option:text,text]
-%TC:macro \citet [option:text,text]
-%TC:envir table 0 1
-%TC:envir table* 0 1
-%TC:envir tabular [ignore] word
-%TC:envir displaymath 0 word
-%TC:envir math 0 word
-%TC:envir comment 0 0
-%%
-%% The first command in your LaTeX source must be the \documentclass
-%% command.
-%%
-%% For submission and review of your manuscript please change the
-%% command to \documentclass[manuscript, screen, review]{acmart}.
-%%
-%% When submitting camera ready or to TAPS, please change the command
-%% to \documentclass[sigconf]{acmart} or whichever template is required
-%% for your publication.
-%%
-%%
 \documentclass[sigconf]{acmart}
-%%
-%% \BibTeX command to typeset BibTeX logo in the docs
-\AtBeginDocument{%
-  \providecommand\BibTeX{{%
-    Bib\TeX}}}
+\setcopyright{none}
+\settopmatter{printacmref=true}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\acmConference[ROSS '26]{15th International Workshop on Runtime and Operating Systems for Supercomputers}{November 15, 2026}{Chicago, IL, USA}
+\acmBooktitle{15th International Workshop on Runtime and Operating Systems for Supercomputers (ROSS '26), November 15, 2026, Chicago, IL, USA}
+\acmYear{2026}
+\copyrightyear{2026}
+\acmDOI{}
+\acmISBN{}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{fancyvrb}
+\usepackage{graphicx}
+\urlstyle{same}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setlength{\emergencystretch}{2em}
 
-%% Rights management information.  This information is sent to you
-%% when you complete the rights form.  These commands have SAMPLE
-%% values in them; it is your responsibility as an author to replace
-%% the commands and values with those provided to you when you
-%% complete the rights form.
-\setcopyright{acmlicensed}
-\copyrightyear{2018}
-\acmYear{2018}
-\acmDOI{XXXXXXX.XXXXXXX}
-%% These commands are for a PROCEEDINGS abstract or paper.
-\acmConference[Conference acronym 'XX]{Make sure to enter the correct
-  conference title from your rights confirmation email}{June 03--05,
-  2018}{Woodstock, NY}
-%%
-%%  Uncomment \acmBooktitle if the title of the proceedings is different
-%%  from ``Proceedings of ...''!
-%%
-%%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
-%%  June 03--05, 2018, Woodstock, NY}
-\acmISBN{978-1-4503-XXXX-X/2018/06}
+\title{Guarding the HEFT Prefix: Copy-Aware Locality Refinement and a One-Hop Chain Certificate for Multi-GPU Task Graphs}
 
+% ROSS is single-blind. Final output must contain complete author metadata.
+\author{Author Information Required}
+\affiliation{\institution{Affiliation Required}\city{City Required}\country{Country Required}}
+\email{email-required@example.invalid}
 
-%%
-%% Submission ID.
-%% Use this when submitting an article to a sponsored event. You'll
-%% receive a unique submission ID from the organizers
-%% of the event, and this ID should be used as the parameter to this command.
-%%\acmSubmissionID{123-A56-BU3}
-
-%%
-%% For managing citations, it is recommended to use bibliography
-%% files in BibTeX format.
-%%
-%% You can then either use BibTeX with the ACM-Reference-Format style,
-%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
-%% support for advanced citation of software artefact from the
-%% biblatex-software package, also separately available on CTAN.
-%%
-%% Look at the sample-*-biblatex.tex files for templates showcasing
-%% the biblatex styles.
-%%
-%%
-%% The majority of ACM publications use numbered citations and
-%% references.  The command \citestyle{authoryear} switches to the
-%% "author year" style.
-%%
-%% If you are preparing content for an event
-%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
-%% citations and references.
-%% Uncommenting
-%% the next command will enable that style.
-%%\citestyle{acmauthoryear}
-
-
-%%
-%% end of the preamble, start of the body of the document source.
 \begin{document}
-
-%%
-%% The "title" command has an optional parameter,
-%% allowing the author to define a "short title" to be used in page headers.
-\title{The Name of the Title Is Hope}
-
-%%
-%% The "author" command and its associated commands are used to define
-%% the authors and their affiliations.
-%% Of note is the shared affiliation of the first two authors, and the
-%% "authornote" and "authornotemark" commands
-%% used to denote shared contribution to the research.
-\author{Ben Trovato}
-\authornote{Both authors contributed equally to this research.}
-\email{trovato@corporation.com}
-\orcid{1234-5678-9012}
-\author{G.K.M. Tobin}
-\correspondingauthor
-\authornotemark[1]
-\email{webmaster@marysville-ohio.com}
-\affiliation{%
-  \institution{Institute for Clarity in Documentation}
-  \city{Dublin}
-  \state{Ohio}
-  \country{USA}
-}
-
-\author{Lars Th{\o}rv{\"a}ld}
-\affiliation{%
-  \institution{The Th{\o}rv{\"a}ld Group}
-  \city{Hekla}
-  \country{Iceland}}
-\email{larst@affiliation.org}
-
-\author{Valerie B\'eranger}
-\affiliation{%
-  \institution{Inria Paris-Rocquencourt}
-  \city{Rocquencourt}
-  \country{France}
-}
-
-\author{Aparna Patel}
-\affiliation{%
- \institution{Rajiv Gandhi University}
- \city{Doimukh}
- \state{Arunachal Pradesh}
- \country{India}}
-
-\author{Huifen Chan}
-\affiliation{%
-  \institution{Tsinghua University}
-  \city{Haidian Qu}
-  \state{Beijing Shi}
-  \country{China}}
-
-\author{Charles Palmer}
-\affiliation{%
-  \institution{Palmer Research Laboratories}
-  \city{San Antonio}
-  \state{Texas}
-  \country{USA}}
-\email{cpalmer@prl.com}
-
-\author{John Smith}
-\affiliation{%
-  \institution{The Th{\o}rv{\"a}ld Group}
-  \city{Hekla}
-  \country{Iceland}}
-\email{jsmith@affiliation.org}
-
-\author{Julius P. Kumquat}
-\correspondingauthor
-\affiliation{%
-  \institution{The Kumquat Consortium}
-  \city{New York}
-  \country{USA}}
-\email{jpkumquat@consortium.net}
-
-%%
-%% By default, the full list of authors will be used in the page
-%% headers. Often, this list is too long, and will overlap
-%% other information printed in the page headers. This command allows
-%% the author to define a more concise list
-%% of authors' names for this purpose.
-\renewcommand{\shortauthors}{Trovato et al.}
-
-%%
-%% The abstract is a short summary of the work to be presented in the
-%% article.
+\raggedbottom
 \begin{abstract}
-  A clear and well-documented \LaTeX\ document is presented as an
-  article formatted for publication by ACM in a conference proceedings
-  or journal publication. Based on the ``acmart'' document class, this
-  article presents and explains many of the common variations, as well
-  as many of the formatting elements an author may use in the
-  preparation of the documentation of their work.
+Earliest-finish-time scheduling accounts for communication that delays the current task, yet a favorable read--write placement can move the unique valid version of an object and induce larger successor traffic. We formalize this HEFT--MSI conflict and introduce \textbf{prefix-safe copy-aware HEFT}, which accepts a lower-copy alternative only if it preserves the modeled finish of committed placement decisions, up to a \(10^{-6}\) ms tolerance. It predicts no unscheduled suffix. A narrow \textbf{successor-aware locality certification (SALC)} companion evaluates a modeled one-hop risk for a graph-visible, fixed-device successor.
+
+We compare HEFT, prefix-safe, and exact gate removal on two selected dense DAG configurations on one 8-GPU NVIDIA L4 node. Across 30 provenance- and correctness-checked executions, prefix-safe outperforms HEFT in all five Cholesky pairs (1.315x geomean, 81.1\% modeled-copy reduction) and all five LU pairs (1.171x, 39.4\%). Gate removal helps Cholesky by 1.162x but loses to prefix-safe on LU by 1.205x despite removing 95.7\% more modeled copy, supporting a workload-dependent risk control rather than a universal speedup source. In a controlled CG case, one fixed-successor SALC intervention conditionally eliminates seven attributed peer-copy requests and is followed by 27 downstream placement changes. Every group, including HEFT, misses our predeclared 5\% scheduler-share target; this is a prototype limitation, not incremental prefix-gate overhead.
+
 \end{abstract}
-
-%%
-%% The code below is generated by the tool at http://dl.acm.org/ccs.cfm.
-%% Please copy and paste the code instead of the example below.
-%%
-\begin{CCSXML}
-<ccs2012>
- <concept>
-  <concept_id>00000000.0000000.0000000</concept_id>
-  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
-  <concept_significance>500</concept_significance>
- </concept>
- <concept>
-  <concept_id>00000000.00000000.00000000</concept_id>
-  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
-  <concept_significance>300</concept_significance>
- </concept>
- <concept>
-  <concept_id>00000000.00000000.00000000</concept_id>
-  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
- <concept>
-  <concept_id>00000000.00000000.00000000</concept_id>
-  <concept_desc>Do Not Use This Code, Generate the Correct Terms for Your Paper</concept_desc>
-  <concept_significance>100</concept_significance>
- </concept>
-</ccs2012>
-\end{CCSXML}
-
-\ccsdesc[500]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
-\ccsdesc[300]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
-\ccsdesc{Do Not Use This Code~Generate the Correct Terms for Your Paper}
-\ccsdesc[100]{Do Not Use This Code~Generate the Correct Terms for Your Paper}
-
-%% A "teaser" image appears between the author and affiliation
-%% information and the body of the document, and typically spans the
-%% page.
-\begin{teaserfigure}
- \includegraphics[width=\textwidth]{sampleteaser}
-  \caption{Seattle Mariners at Spring Training, 2010.}
-  \Description{Enjoying the baseball game from the third-base
-  seats. Ichiro Suzuki preparing to bat.}
-  \label{fig:teaser}
-\end{teaserfigure}
-
-\received{20 February 2007}
-\received[revised]{12 March 2009}
-\received[accepted]{5 June 2009}
-
-%%
-%% This command processes the author and affiliation and title
-%% information and builds the first part of the formatted document.
+\ccsdesc[500]{Computer systems organization~Heterogeneous (hybrid) systems}
+\ccsdesc[500]{Software and its engineering~Runtime environments}
+\ccsdesc[300]{Theory of computation~Scheduling algorithms}
+\keywords{multi-GPU task graphs, HEFT, data locality, runtime scheduling, copy traffic}
 \maketitle
 
+\section{Introduction}\label{introduction}
 
-\section{Introduction}
-ACM's consolidated article template, introduced in 2017, provides a
-consistent \LaTeX\ style for use across ACM publications, and
-incorporates accessibility and metadata-extraction functionality
-necessary for future Digital Library endeavors. Numerous ACM and
-SIG-specific \LaTeX\ templates have been examined, and their unique
-features incorporated into this single new template.
+Online heterogeneous schedulers must decide where to execute a task before the rest of a dynamic graph has necessarily become runnable. HEFT-style scheduling makes this decision by estimating each device's earliest finish time (EFT), including the time needed to make the current task's inputs available. This is a strong local objective: it combines device availability, current input readiness, and task duration in a single comparable quantity.
 
-If you are new to publishing with ACM, this document is a valuable
-guide to the process of preparing your work for publication. If you
-have published with ACM before, this document provides insight and
-instruction into more recent changes to the article template.
+The local objective is nevertheless incomplete when placement changes data state. In CUDASTF, a read--write access leaves the new version Modified on the selected GPU and invalidates stale copies. A placement that wins a fraction of a millisecond for the current task can consequently move a large mutable version away from the GPU where a later task must consume it. The later task either copies the version back or follows it and moves other inputs. In both cases the locally best EFT decision can initiate a residency cascade whose traffic is larger than the immediate gain.
 
-The ``\verb|acmart|'' document class can be used to prepare articles
-for any ACM publication --- conference or journal, and for any stage
-of publication, from review to final ``camera-ready'' copy, to the
-author's own version, with {\itshape very} few changes to the source.
+This paper asks a narrow practical question: can an online scheduler suppress harmful locality deviations without attempting to solve the remaining DAG? Our main answer is a prefix-bounded refinement. We first retain HEFT's device as a baseline. We then consider devices that reduce modeled current-input copy and admit one only if its finish fits the baseline's current-prefix finish bound up to numerical tolerance. This method is broad: it applies to ordinary tasks and does not require a special mutable-chain label. It also remains intentionally local. The safety condition says nothing about the makespan of the unscheduled suffix.
 
-\section{Template Overview}
-As noted in the introduction, the ``\verb|acmart|'' document class can
-be used to prepare many different kinds of documentation --- a
-double-anonymous initial submission of a full-length technical paper, a
-two-page SIGGRAPH Emerging Technologies abstract, a ``camera-ready''
-journal article, a SIGCHI Extended Abstract, and more --- all by
-selecting the appropriate {\itshape template style} and {\itshape
-  template parameters}.
+We separately ask whether the motivating migrate-then-return pattern can ever be identified directly. For a controlled case with an explicit fixed-device successor, SALC compares a one-hop avoided output-copy lower bound against the producer's HEFT-relative EFT damage. This companion identifies the constructed chain, but its evidence is a controlled mechanism certificate rather than natural-CG performance.
 
-This document will explain the major features of the document
-class. For further information, the {\itshape \LaTeX\ User's Guide} is
-available from
-\url{https://www.acm.org/publications/proceedings-template}.
+Our contributions are:
 
-\subsection{Template Styles}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  We give an executable-system formalization showing that HEFT's current-task EFT objective and MSI residency transitions admit a legal migrate-then-return counterexample.
+\item
+  We define a translation-invariant, prefix-safe copy-aware refinement that preserves the modeled finish bound of the current scheduling prefix up to numerical tolerance while optimizing a secondary copy-and-queue score.
+\item
+  We implement a conservative fixed-successor SALC certificate and validate one intervention-consistent CG-derived trace using placement, data identity, correctness, and runtime-issued transfer evidence.
+\item
+  We report a clean 30-run gate-only evaluation that exposes opposite Cholesky and LU ablation outcomes, together with an explicit negative scheduler-share result and coverage boundary.
+\end{enumerate}
 
-The primary parameter given to the ``\verb|acmart|'' document class is
-the {\itshape template style} which corresponds to the kind of publication
-or SIG publishing the work. This parameter is enclosed in square
-brackets and is a part of the {\verb|documentclass|} command:
-\begin{verbatim}
-  \documentclass[STYLE]{acmart}
-\end{verbatim}
+The resulting claim is deliberately smaller than ``automatic chain discovery.'' Prefix safety mitigates traffic without recognizing a chain; fixed-successor SALC certifies one graph-visible edge pattern. Neither method proves a suffix or global makespan improvement.
 
-Journals use one of three template styles. All but three ACM journals
-use the {\verb|acmsmall|} template style:
-\begin{itemize}
-\item {\texttt{acmsmall}}: The default journal template style.
-\item {\texttt{acmlarge}}: Used by JOCCH and TAP.
-\item {\texttt{acmtog}}: Used by TOG.
-\end{itemize}
+\section{System Model and HEFT--MSI Conflict}\label{system-model-and-heftmsi-conflict}
 
-The majority of conference proceedings documentation will use the {\verb|acmconf|} template style.
-\begin{itemize}
-\item {\texttt{sigconf}}: The default proceedings template style.
-\item{\texttt{sigchi}}: Used for SIGCHI conference articles.
-\item{\texttt{sigplan}}: Used for SIGPLAN conference articles.
-\end{itemize}
+\subsection{Online task and residency model}\label{online-task-and-residency-model}
 
-\subsection{Template Parameters}
+Let \(G=(V,E)\) be a task DAG and \(D=\{0,\ldots,m-1\}\) the GPU set. Task \(v\) has predicted compute time \(p_v>0\). A logical data object \(x\) has modeled copy time
 
-In addition to specifying the {\itshape template style} to be used in
-formatting your work, there are a number of {\itshape template parameters}
-which modify some part of the applied template style. A complete list
-of these parameters can be found in the {\itshape \LaTeX\ User's Guide.}
+\[
+c_x = \frac{\operatorname{bytes}(x)}{B},
+\]
 
-Frequently-used parameters, or combinations of parameters, include:
-\begin{itemize}
-\item {\texttt{anonymous,review}}: Suitable for a ``double-anonymous''
-  conference submission. Anonymizes the work and includes line
-  numbers. Use with the \texttt{\string\acmSubmissionID} command to print the
-  submission's unique ID on each page of the work.
-\item{\texttt{authorversion}}: Produces a version of the work suitable
-  for posting by the author.
-\item{\texttt{screen}}: Produces colored hyperlinks.
-\end{itemize}
+where \(B\) is the scheduler's explicit copy-bandwidth parameter. At scheduling step \(k\), \(L_k(d)\) is GPU \(d\)'s modeled ready time and \(M_k(x,d)\in\{M,S,I\}\) is the scheduler's Modified/Shared/Invalid residency state.
 
-This document uses the following string as the first command in the
-source file:
-\begin{verbatim}
-\documentclass[sigconf]{acmart}
-\end{verbatim}
+For current task \(v\), let \(A_k(v,d)\) be the latest availability time among its read and read--write inputs on \(d\). A local Modified or Shared instance incurs no transfer; otherwise availability includes a copy from a valid instance. CUDASTF's current HEFT estimate is
 
-\section{Modifications}
+\[
+F_k(v,d) = \max\{L_k(d), A_k(v,d)\} + p_v,
+\qquad
+b = \arg\min_{d\in D} F_k(v,d),
+\]
 
-Modifying the template --- including but not limited to: adjusting
-margins, typeface sizes, line spacing, paragraph and list definitions,
-and the use of the \verb|\vspace| command to manually adjust the
-vertical spacing between elements of your work --- is not allowed.
+with a deterministic tie order. We call \(b\) the \textbf{HEFT baseline device}. After a write-like access on \(d\), the scheduler's MSI transition makes the new version valid at \(d\) and invalidates conflicting copies elsewhere.
 
-{\bfseries Your document will be returned to you for revision if
-  modifications are discovered.}
+Here ``HEFT'' denotes this CUDASTF fork's HEFT-style current-task device selector; the runtime supplies task order rather than recomputing the offline upward-rank order of canonical HEFT. Equal-EFT candidates are resolved by lower device ID.
 
-\section{Typefaces}
+This formulation also explains why the earlier copy-gain-plus-penalty idea can work even though HEFT already models communication. HEFT folds current input readiness into a \textbf{maximum} before adding compute time, whereas the secondary copy quantity \(K(d)\) below \textbf{sums} modeled transfers. A busy device or one late dependency can dominate \(F_k\) and hide several other transfers: two devices can have the same current-prefix finish while moving very different total bytes. Copy gain exposes that hidden locality slack; the prefix gate prevents the scheduler from buying lower traffic by extending the finish frontier that HEFT has already established. The method is therefore a secondary refinement of HEFT, not a claim that HEFT ignores communication.
 
-The ``\verb|acmart|'' document class requires the use of the
-``Libertine'' typeface family. Your \TeX\ installation should include
-this set of packages. Please do not substitute other typefaces. The
-``\verb|lmodern|'' and ``\verb|ltimes|'' packages should not be used,
-as they will override the built-in typeface families.
+The transfer quantities reported in this paper require precise language. \textbf{Modeled copy bytes/time} are computed by the scheduler's MSI and bandwidth model. \textbf{Runtime-issued GPU-peer transfers} are data-interface copies that CUDASTF actually requests between distinct GPU endpoints. They are not CUPTI transactions, link utilization, or physical PCIe/NVLink bus traffic.
 
-\section{Title Information}
+\subsection{Conflict definition}\label{conflict-definition}
 
-The title of your work should use capital letters appropriately -
-\url{https://capitalizemytitle.com/} has useful rules for
-capitalization. Use the {\verb|title|} command to define the title of
-your work. If your work has a subtitle, define it with the
-{\verb|subtitle|} command.  Do not insert line breaks in your title.
+Let \(\Phi_k(v,d)\) denote the future data-movement penalty induced by placing \(v\) on \(d\). This is a conceptual suffix quantity, not something our main method computes. A HEFT--MSI locality conflict exists for devices \(g,h\) when
 
-If your title is lengthy, you must define a short version to be used
-in the page headers, to prevent overlapping text. The \verb|title|
-command has a ``short title'' parameter:
-\begin{verbatim}
-  \title[short title]{full title}
-\end{verbatim}
+\[
+F_k(v,g) < F_k(v,h)
+\]
 
-\section{Authors and Affiliations}
+but
 
-Each author must be defined separately for accurate metadata
-identification.  As an exception, multiple authors may share one
-affiliation. Authors' names should not be abbreviated; use full first
-names wherever possible. Include authors' e-mail addresses whenever
-possible.
+\[
+\Phi_k(v,g)-\Phi_k(v,h)
+  > F_k(v,h)-F_k(v,g).
+\]
 
-Grouping authors' names or e-mail addresses, or providing an ``e-mail
-alias,'' as shown below, is not acceptable:
-\begin{verbatim}
-  \author{Brooke Aster, David Mehldau}
-  \email{dave,judy,steve@university.edu}
-  \email{firstname.lastname@phillips.org}
-\end{verbatim}
+Thus the ordering of \(g\) and \(h\) is reversed under \(F_k+\Phi_k\). When \(D=\{g,h\}\), as in the construction below, their global minimizers differ; with more devices, the definition asserts only this pairwise reversal.
 
-The \verb|authornote| and \verb|authornotemark| commands allow a note
-to apply to multiple authors --- for example, if the first two authors
-of an article contributed equally to the work.
+A two-GPU construction establishes existence. Let a mutable object \(x\) be valid on GPU 1 and invalid on GPU 0, with copy time \(C\). Set GPU loads to \(L(0)=0\) and \(L(1)=C+\epsilon\), where \(0<\epsilon<C\). A read--write task \(v\) finishes at \(C+p_v\) on GPU 0 and at \(C+\epsilon+p_v\) on GPU 1, so HEFT moves \(x\) to GPU 0 for an \(\epsilon\) advantage. Now give successor \(u\) another large input that fixes its preferred execution at GPU 1. Under HEFT, \(u\) copies the new version of \(x\) back at cost \(C\); if \(v\) had stayed on GPU 1, that copy would be absent. Thus the construction proves a \(C\)-byte traffic difference. If \(u\) lies on the serial dependency path, no intervening task overwrites \(x\), and the return copy is not completely hidden by other waiting, the suffix completion additionally loses \(C-\epsilon>0\).
 
-If your author list is lengthy, you must define a shortened version of
-the list of authors to be used in the page headers, to prevent
-overlapping text. The following command should be placed just after
-the last \verb|\author{}| definition:
-\begin{verbatim}
-  \renewcommand{\shortauthors}{McCartney, et al.}
-\end{verbatim}
-Omitting this command will force the use of a concatenated list of all
-of the authors' names, which may result in overlapping text in the
-page headers.
+This is an existential statement. It does not imply that HEFT usually fails, that every read--write task belongs to a harmful chain, or that any local correction improves the full DAG.
 
-The article template's documentation, available at
-\url{https://www.acm.org/publications/proceedings-template}, has a
-complete explanation of these commands and tips for their effective
-use.
+\section{Bounded Locality Refinements}\label{bounded-locality-refinements}
 
-Note that authors' addresses are mandatory for journal articles.
+\subsection{Prefix-safe copy-aware HEFT}\label{prefix-safe-copy-aware-heft}
 
-\section{Rights Information}
+For the current task, let \(K(d)\) be the sum of modeled transfer times for its read and read--write inputs on device \(d\). Let \(T(d)=\max\{L_k(d),A_k(v,d)\}\) and define the modeled queue delay
 
-Authors of any work published by ACM will need to complete a rights
-form. Depending on the kind of work, and the rights management choice
-made by the author, this may be copyright transfer, permission,
-license, or an OA (open access) agreement.
+\[
+Q(d)=\max\{0,T(d)-A_k(v,d)\}.
+\]
 
-Regardless of the rights management choice, the author will receive a
-copy of the completed rights form once it has been submitted. This
-form contains \LaTeX\ commands that must be copied into the source
-document. When the document source is compiled, these commands and
-their parameters add formatted text to several areas of the final
-document:
-\begin{itemize}
-\item the ``ACM Reference Format'' text on the first page.
-\item the ``rights management'' text on the first page.
-\item the conference information in the page header(s).
-\end{itemize}
+We first compute the HEFT baseline \(b\), breaking equal EFTs by lower device ID. Let
 
-Rights information is unique to the work; if you are preparing several
-works for an event, make sure to use the correct set of commands with
-each of the works.
+\[
+R = \max\left\{\text{current system finish},\; \max_{d\in D} L_k(d)\right\}
+\]
 
-The ACM Reference Format text is required for all articles over one
-page in length, and is optional for one-page articles (abstracts).
+be the current ready-time frontier, and define the baseline and candidate prefix finishes
 
-\section{CCS Concepts and User-Defined Keywords}
+\[
+P_b = \max\{R,F(b)\}, \qquad P(d)=\max\{R,F(d)\}.
+\]
 
-Two elements of the ``acmart'' document class provide powerful
-taxonomic tools for you to help readers find your work in an online
-search.
+The prefix gate admits \(d\ne b\) only if
 
-The ACM Computing Classification System ---
-\url{https://www.acm.org/publications/class-2012} --- is a set of
-classifiers and concepts that describe the computing
-discipline. Authors can select entries from this classification
-system, via \url{https://dl.acm.org/ccs/ccs.cfm}, and generate the
-commands to be included in the \LaTeX\ source.
+\[
+P(d) \le P_b + \varepsilon_p.
+\]
 
-User-defined keywords are a comma-separated list of words and phrases
-of the authors' choosing, providing a more flexible way of describing
-the research being presented.
+An alternative may therefore have a later per-task EFT than HEFT when that difference is hidden under the already established ready frontier, but it may increase the modeled finish of the current scheduling prefix by at most the numerical tolerance \(\varepsilon_p\). Adding the same constant to every ready and finish time changes neither this decision nor the queue-delay terms, avoiding a sensitivity of gates normalized by absolute EFT.
 
-CCS concepts and user-defined keywords are required for for all
-articles over two pages in length, and are optional for one- and
-two-page articles (or abstracts).
+\textbf{Modeled current-prefix invariant.} If candidate \(d\) passes the gate above, replacing \(b\) by \(d\) increases the scheduler's current prefix-finish quantity by at most \(\varepsilon_p\). This is the acceptance predicate itself: \(P(d)\le P_b+\varepsilon_p\). Adding the same constant to every ready and finish time leaves both sides unchanged, so the predicate is time-shift invariant. The implementation fixes \(\varepsilon_p=10^{-6}\) ms. The invariant concerns the model's scalar \(\max\{R,F\}\); it does not preserve the current task's EFT, the unscheduled suffix, or observed wall time. Here ``prefix'' means placement decisions already committed, not a predicted critical-path prefix.
 
-\section{Sectioning Commands}
+Among prefix-safe alternatives, we retain the existing copy-aware selectivity. Define
 
-Your work should use standard \LaTeX\ sectioning commands:
-\verb|\section|, \verb|\subsection|, \verb|\subsubsection|,
-\verb|\paragraph|, and \verb|\subparagraph|. The sectioning levels up to
-\verb|\subsubsection| should be numbered; do not remove the numbering
-from the commands.
+\[
+G_K(d)=\frac{K(b)-K(d)}{\max\{K_{\min},K(b)\}},
+\qquad
+G_Q(d)=\frac{Q(b)-Q(d)}{\max\{Q_{\min},Q(b)\}}.
+\]
 
-Simulating a sectioning command by setting the first word or words of
-a paragraph in boldface or italicized text is {\bfseries not allowed.}
+The candidate must have a strictly positive copy saving and satisfy \(G_K(d)\ge\tau\). Let \(n_v\) be dependency count, \(B_v\) the bytes of read/read--write inputs, \(p_v\) the predicted task time in ms, and \(\operatorname{clip}(z)=\min\{1,\max\{0,z\}\}\). Define
 
-Below are examples of sectioning commands.
+\[
+\begin{aligned}
+c_p&=\operatorname{clip}\!\left(\frac{\ln(1+p_v)}{\ln 501}\right),
+&c_n&=\operatorname{clip}\!\left(\frac{n_v}{16}\right),\\
+c_B&=\operatorname{clip}\!\left(\frac{\ln(1+B_v)}{\ln(1+2^{30})}\right),
+&c(v)&=\operatorname{clip}(0.55c_p+0.30c_n+0.15c_B).
+\end{aligned}
+\]
 
-\subsection{Subsection}
-\label{sec:subsection}
+In the frozen configuration, \(\tau=0.25\) when \(c(v)>0.60\) and \(0.15\) otherwise, and \(\lambda_Q=0.35\). These inherited values are shared by every benchmark, were frozen before the repeated confirmation, and are not claimed optimal. Eligible alternatives are ranked by
 
-This is a subsection.
+\[
+S(d)=G_K(d)+\lambda_Q\max\{0,G_Q(d)\},
+\]
 
-\subsubsection{Subsubsection}
-\label{sec:subsubsection}
+then by lower EFT and lower device ID under a score tie. The selected device is HEFT when no candidate passes both gates.
 
-This is a subsubsection.
+\begin{Verbatim}[fontsize=\scriptsize]
+PREFIX-SAFE-COPY(task v, candidates D)
+    b <- canonical HEFT candidate
+    R <- max(current system finish, max device ready time)
+    P_b <- max(R, F(b))
+    eligible <- empty
+    for d in D, d != b:
+        if candidate fields are not finite: continue
+        copy_saving <- K(b) - K(d)
+        copy_gain <- copy_saving / max(K_min, K(b))
+        if copy_saving <= eps or copy_gain < tau(v): continue
+        if F(d) > P_b + eps_prefix: continue
+        queue_gain <- (Q(b) - Q(d)) / max(Q_min, Q(b))
+        score <- copy_gain + lambda_Q * max(0, queue_gain)
+        add (d, score) to eligible
+    if eligible is empty: return b
+    return highest score, then lower EFT, then lower device ID
+\end{Verbatim}
 
-\paragraph{Paragraph}
+The method records accepted copy saving, HEFT-relative EFT damage, and prefix damage. Verification requires aggregate prefix damage to be zero within numerical tolerance. The broad mode is our main method. A one-read--write/unique-owner restriction was also implemented, but every task in the studied Cholesky and LU DAGs satisfied that scope, and the restricted and broad variants produced identical placements. The scope is therefore not evidence of chain detection.
 
-This is a paragraph.
+For controlled mechanism isolation, the source-matched \texttt{no-prefix} ablation retains the same canonical HEFT baseline, candidate set, copy and queue gains, thresholds, score, and tie breaks, but disables only the prefix admission rule. It consequently has no Proposition 1 guarantee. This exact removal distinguishes the gate's effect from the earlier conventional relative-EFT comparator, which changes the timing rule itself.
 
-\subparagraph{Subparagraph}
+\subsection{Fixed-successor SALC companion}\label{fixed-successor-salc-companion}
 
-This is a subparagraph.
+Prefix safety cannot accept a device whose current EFT extends \(P_b\), even when one known future copy is much larger. SALC addresses only a graph-visible version of that case.
 
-\section{Tables}
+For producer \(v\), SALC identifies write-like output symbols read by direct successors. If successor \(u\) is explicitly fixed to GPU \(a(u)\), that GPU is an authoritative anchor. For a hypothetical producer device \(d\), a conservative one-hop modeled copy quantity is
 
-The ``\verb|acmart|'' document class includes the ``\verb|booktabs|''
-package --- \url{https://ctan.org/pkg/booktabs} --- for preparing
-high-quality tables.
+\[
+\Phi_1(d)=
+\sum_{(x,a)\in U}
+\mathbf{1}[d\ne a]\frac{\operatorname{bytes}(x)}{B},
+\]
 
-Table captions are placed {\itshape above} the table.
+where \(U\) deduplicates output-symbol/anchor pairs. For HEFT baseline \(b\) and alternative \(d\), SALC computes
 
-Because tables cannot be split across pages, the best placement for
-them is typically the top of the page nearest their initial cite.  To
-ensure this proper ``floating'' placement of tables, use the
-environment \textbf{table} to enclose the table's contents and the
-table caption.  The contents of the table itself must go in the
-\textbf{tabular} environment, to be aligned properly in rows and
-columns, with the desired horizontal and vertical rules.  Again,
-detailed instructions on \textbf{tabular} material are found in the
-\textit{\LaTeX\ User's Guide}.
+\[
+G_{\mathrm{future}}(d)=\Phi_1(b)-\Phi_1(d),
+\qquad
+\Delta_F(d)=\max\{0,F(d)-F(b)\},
+\]
 
-Immediately following this sentence is the point at which
-Table~\ref{tab:freq} is included in the input file; compare the
-placement of the table here with the table in the printed output of
-this document.
+and accepts only when
 
-\begin{table}
-  \caption{Frequency of Special Characters}
-  \label{tab:freq}
-  \begin{tabular}{ccl}
-    \toprule
-    Non-English or Math&Frequency&Comments\\
-    \midrule
-    \O & 1 in 1,000& For Swedish names\\
-    $\pi$ & 1 in 5& Common in math\\
-    \$ & 4 in 5 & Used in business\\
-    $\Psi^2_1$ & 1 in 40,000& Unexplained usage\\
-  \bottomrule
-\end{tabular}
-\end{table}
+\[
+C_{\mathrm{SALC}}(d)
+=G_{\mathrm{future}}(d)-\Delta_F(d)
+> \mu,
+\]
 
-To set a wider table, which takes up the whole width of the page's
-live area, use the environment \textbf{table*} to enclose the table's
-contents and the table caption.  As with a single-column table, this
-wide table will ``float'' to a location deemed more
-desirable. Immediately following this sentence is the point at which
-Table~\ref{tab:commands} is included in the input file; again, it is
-instructive to compare the placement of the table here with the table
-in the printed output of this document.
+for margin \(\mu\) (zero in the controlled certificate). SALC selects the positive candidate with the largest certificate, breaking ties by EFT.
 
-\begin{table*}
-  \caption{Some Typical Commands}
-  \label{tab:commands}
-  \begin{tabular}{ccl}
-    \toprule
-    Command &A Number & Comments\\
-    \midrule
-    \texttt{{\char'134}author} & 100& Author \\
-    \texttt{{\char'134}table}& 300 & For tables\\
-    \texttt{{\char'134}table*}& 400& For wider tables\\
-    \bottomrule
-  \end{tabular}
+The inequality is a certificate only when the producer creates the unique relevant version, the fixed successor reads that same version, and no intervening task overwrites it. It certifies a modeled one-hop edge risk, not actual saved link time, critical-path delay, suffix speedup, or global makespan. Although the implementation can form a shadow anchor for non-fixed successors, the positive evidence here is specifically the authoritative fixed-successor case.
+
+\section{Controlled CG-Derived Chain Certificate}\label{controlled-cg-derived-chain-certificate}
+
+We constructed a controlled residual-audit path inside CG to realize the formal conflict without presenting it as natural CG performance. The setup initializes a 128 MiB target version on GPU 0. Under wrappers pinned to canonically identical calibration content and strict task keys, HEFT places read--write task 46 (\texttt{cg\_axpy}) on GPU 1; an independent runtime-load attestation was unavailable. A direct \texttt{cg\_dot} successor is fixed to GPU 0, so task 48 returns the produced data; five later fixed reads repeat that direction.
+
+The corrected fixed-anchor SALC implementation makes exactly one direct intervention: task 46 stays on GPU 0. Its one-copy future lower bound is 6.483948 ms, its HEFT-relative EFT damage is 0.474260 ms, and the certificate is therefore 6.009688 ms. Replaying the independently recorded HEFT decisions shows 28 final placement differences: the direct task plus 27 downstream cascade changes.
+
+\begin{table*}[t]
+\centering
+\caption{Controlled CG-derived fixed-successor certificate.}\label{tab:controlled-cg-certificate}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Controlled trace property & HEFT & Fixed-successor SALC \\
+\midrule
+Direct residual interventions & 0 & 1 (task 46, GPU 1 -> GPU 0) \\
+Modeled owner round trips & 1 & 0 \\
+Target runtime-issued GPU-peer bytes & 939,524,096 & 0 \\
+Total runtime-issued GPU-peer bytes & 2,684,355,048 & 480 \\
+All runtime-issued transfer bytes & 4,563,403,232 & 939,524,592 \\
+Relative residual correctness gap & PASS & 2.3954e-16 (PASS) \\
+\bottomrule
+\end{tabularx}
 \end{table*}
 
-Always use midrule to separate table header rows from data rows, and
-use it only for this purpose. This enables assistive technologies to
-recognise table headers and support their users in navigating tables
-more easily.
+The remaining 480 peer bytes under SALC are scalar traffic unrelated to the target. Target peer bytes fall by 100\%, total peer bytes by 99.99998\%, and all runtime-issued bytes by 79.41\%. The artifact verifier joins task/data identity with the fixed-successor interval and recomputes SALC's placement digest; runtime rows do not contain an independent data-version epoch, so attribution is explicitly conditional rather than overstated.
 
-\section{Math Equations}
-You may want to display math equations in three distinct styles:
-inline, numbered or non-numbered display.  Each of the three are
-discussed in the next sections.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/controlled_cg_chain_certificate.pdf}
+\Description{Controlled CG-derived migrate--return pattern and the fixed-successor SALC certificate. The figure summarizes trace-on, controlled mechanism evidence; its latency is not performance eligible and its task/data attribution is conditional.}
+\caption{Controlled CG-derived migrate--return pattern and the fixed-successor SALC certificate. The figure summarizes trace-on, controlled mechanism evidence; its latency is not performance eligible and its task/data attribution is conditional.}
+\end{figure*}
 
-\subsection{Inline (In-text) Equations}
-A formula that appears in the running text is called an inline or
-in-text formula.  It is produced by the \textbf{math} environment,
-which can be invoked with the usual
-\texttt{{\char'134}begin\,\ldots{\char'134}end} construction or with
-the short form \texttt{\$\,\ldots\$}. You can use any of the symbols
-and structures, from $\alpha$ to $\omega$, available in
-\LaTeX~\cite{Lamport:LaTeX}; this section will simply show a few
-examples of in-text equations in context. Notice how this equation:
-\begin{math}
-  \lim_{n\rightarrow \infty}x=0
-\end{math},
-set here in in-line math style, looks slightly different when
-set in display style.  (See next section).
+The observations are single, instrumented, and split across two pinned task wrappers. We therefore use no latency difference from this experiment; it establishes only an intervention-consistent decision-and-traffic certificate.
 
-\subsection{Display Equations}
-A numbered display equation---one set off by vertical space from the
-text and centered horizontally---is produced by the \textbf{equation}
-environment. An unnumbered display equation is produced by the
-\textbf{displaymath} environment.
+\section{Experimental Methodology and Evidence Discipline}\label{experimental-methodology-and-evidence-discipline}
 
-Again, in either environment, you can use any of the symbols and
-structures available in \LaTeX\@; this section will just give a couple
-of examples of display equations in context.  First, consider the
-equation, shown as an inline equation above:
-\begin{equation}
-  \lim_{n\rightarrow \infty}x=0
-\end{equation}
-Notice how it is formatted somewhat differently in
-the \textbf{displaymath}
-environment.  Now, we'll enter an unnumbered equation:
-\begin{displaymath}
-  \sum_{i=0}^{\infty} x + 1
-\end{displaymath}
-and follow it with another numbered equation:
-\begin{equation}
-  \sum_{i=0}^{\infty}x_i=\int_{0}^{\pi+2} f
-\end{equation}
-just to demonstrate \LaTeX's able handling of numbering.
+\subsection{Platform, workloads, and schedulers}\label{platform-workloads-and-schedulers}
 
-\section{Figures}
+The primary clean confirmation executed source \texttt{cfdd6d1f\allowbreak{}f8f1c45c\allowbreak{}8c9c0da6\allowbreak{}2a859452\allowbreak{}dce09b86} on one dual-NUMA Europa node with eight NVIDIA L4 GPUs (23,034 MiB each), driver 595.71.05, CUDA 12.4.131, GCC 13.3.0, CMake 4.3.4, CUDASTF 3.2.0.0, and a C++17 Release build. GPUs 0--3 and 4--7 form separate NUMA-local PCIe groups; cross-group traffic traverses the system interconnect. A nearby metadata snapshot identifies a dual-socket Intel Xeon Gold 6548N host, but its clock and persistence readings are not treated as steady-state attestations for the clean run.
 
-The ``\verb|figure|'' environment should be used for figures. One or
-more images can be placed within a figure. If your figure contains
-third-party material, you must clearly identify it as such, as shown
-in the example below.
-\begin{figure}[h]
-  \centering
- \includegraphics[width=\linewidth]{sample-franklin}
-  \caption{1907 Franklin Model D roadster. Photograph by Harris \&
-    Ewing, Inc. [Public domain], via Wikimedia
-    Commons. (\url{https://goo.gl/VLCRBB}).}
-  \Description{A woman and a girl in white dresses sit in an open car.}
-\end{figure}
+The scheduler uses one scalar 20.7 GB/s copy parameter, derived from a complete directed-pair microbenchmark with 20.726 GB/s median. It does not model the NODE/SYS pair distinction, contention, or copy/compute overlap. Robust task-cost calibration runs on GPU 0 and is then shared across the eight identical L4s.
 
-Your figures should contain a caption which describes the figure to
-the reader.
+\begin{table*}[t]
+\centering
+\caption{Workload configurations and validation contracts.}\label{tab:workloads}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Workload & Arguments & Precision & Submitted tasks & Structure and validation \\
+\midrule
+Cholesky & \texttt{\detokenize{28672 256}} & FP64 & 240,464 & 112 x 112 tiled dense factorization; projected backward error and checksum \\
+LU decomposition & \texttt{\detokenize{23552 256}} & FP64 & 263,810 & 92 x 92 tiled no-pivot factorization; projected residual and checksum \\
+MiniWeather & \texttt{\detokenize{1536 2048 1536}} & FP64 & 55,296 & six independent finite-horizon regional RK3 chains; finalized changed-state checksum \\
+Standard CG & \texttt{\detokenize{16777216 40 10}} & FP64 & 3,040 & 40 static contexts with bounded iterations; excluded from HEFT-relative performance after identity failure \\
+\bottomrule
+\end{tabularx}
+\end{table*}
 
-Figure captions are placed {\itshape below} the figure.
+The Cholesky and LU configurations in Table~\ref{tab:workloads} are the primary repeated workloads. They were selected after one-run exploration because they expose locality-sensitive placement choices, then frozen before confirmation; they are not an unbiased benchmark survey or evidence that the conflict is prevalent. MiniWeather is retained only as a secondary neutral case, and standard CG only as a control/certificate source.
 
-Every figure should also have a figure description unless it is purely
-decorative. These descriptions convey what’s in the image to someone
-who cannot see it. They are also used by search engine crawlers for
-indexing images, and when images cannot be loaded.
+All repeated workloads set \path{CUDASTF_THESIS_DEFER_KERNEL_TASKS=1}: each DAG is fully materialized before \texttt{ctx.submit()}. Placement decisions remain sequential and irrevocable, and prefix-safe itself uses no successor prediction, but these experiments do not validate dynamic task arrival. Cholesky and LU record a CUDA start event immediately before DAG construction and a completion event after deferred submission finishes; the reported benchmark interval therefore spans graph construction, scheduling-induced gaps, and GPU execution, but excludes the subsequent correctness check.
 
-A figure description must be unformatted plain text less than 2000
-characters long (including spaces).  {\bfseries Figure descriptions
-  should not repeat the figure caption – their purpose is to capture
-  important information that is not already provided in the caption or
-  the main text of the paper.} For figures that convey important and
-complex new information, a short text description may not be
-adequate. More complex alternative descriptions can be placed in an
-appendix and referenced in a short figure description. For example,
-provide a data table capturing the information in a bar chart, or a
-structured list representing a graph.  For additional information
-regarding how best to write figure descriptions and why doing this is
-so important, please see
-\url{https://www.acm.org/publications/taps/describing-figures/}.
+The primary matrix contains HEFT (H), prefix-safe (P), and exact no-prefix (N) on Cholesky and LU, in fixed H--P--N order for five repeats: \(2\times3\times5=30\) executions. H is also the runtime-default scheduler in this fork. P and N share the baseline, candidates, gains, thresholds, score, and tie breaks; N disables only prefix admission. Each benchmark performs a fresh robust single-GPU calibration prepass shared across the three variants. Calibration discards warm-up sample 0, retains samples 1--9, requires at least 7/9 within \(\max(25\%\text{ of median},0.005\text{ ms})\), and requires scaled MAD no greater than \(\max(10\%\text{ of median},0.005\text{ ms})\).
 
-\subsection{The ``Teaser Figure''}
+The performance-eligible run disables per-task \texttt{COPY\_TASK}, decision, comparator-shadow, and runtime-transfer tracing; only aggregate scheduler summaries remain enabled. All 30 executions pass the predeclared provenance, completeness, calibration, correctness, and deterministic placement/copy/checksum checks. Performance direction and the scheduler-share target are reported outcomes, not qualification criteria.
 
-A ``teaser figure'' is an image, or set of images in one figure, that
-are placed after all author and affiliation information, and before
-the body of the article, spanning the page. If you wish to have such a
-figure in your article, place the command immediately before the
-\verb|\maketitle| command:
-\begin{verbatim}
-  \begin{teaserfigure}
- \includegraphics[width=\textwidth]{sampleteaser}
-    \caption{figure caption}
-    \Description{figure description}
-  \end{teaserfigure}
-\end{verbatim}
+\subsection{Metrics and statistics}\label{metrics-and-statistics}
 
-\section{Citations and Bibliographies}
+We report the benchmark interval, paired HEFT-relative speedup, and scheduler-modeled input-copy bytes. For the five clean pairs we report the geomean, all observed directions, and the descriptive minimum--maximum range; with only five fixed-order pairs we do not claim a population confidence interval. Copy bytes/time are model outputs, not physical-link measurements.
 
-The use of \BibTeX\ for the preparation and formatting of one's
-references is strongly recommended. Authors' names should be complete
---- use full first names (``Donald E. Knuth'') not initials
-(``D. E. Knuth'') --- and the salient identifying features of a
-reference should be included: title, year, volume, number, pages,
-article DOI, etc.
+Scheduler share is the sum of measured per-task scheduler decision time divided by the benchmark interval. It is not automatically critical-path slowdown. Our predeclared 5\% target is an engineering target for this prototype, not a community deployability standard. Absolute scheduler milliseconds and microseconds per task are reported alongside the ratio, and HEFT is evaluated by the same definition.
 
-The bibliography is included in your source document with these two
-commands, placed just before the \verb|\end{document}| command:
-\begin{verbatim}
-  \bibliographystyle{ACM-Reference-Format}
-  \bibliography{bibfile}
-\end{verbatim}
-where ``\verb|bibfile|'' is the name, without the ``\verb|.bib|''
-suffix, of the \BibTeX\ file.
+\subsection{Control validity}\label{fail-closed-identity-boundary}
 
-Citations and references are numbered by default. A small number of
-ACM publications have citations and references formatted in the
-``author year'' style; for these exceptions, please include this
-command in the {\bfseries preamble} (before the command
-``\verb|\begin{document}|'') of your \LaTeX\ source:
-\begin{verbatim}
-  \citestyle{acmauthoryear}
-\end{verbatim}
+An older broad experiment used a zero-weight same-path control. It reproduced HEFT exactly for Cholesky, LU, and MiniWeather but failed identity for standard CG in all five repeats; we therefore report no standard-CG HEFT-relative performance. A later one-run repair cannot retroactively qualify that frozen block. Separately executed identity-control rows also differ from HEFT by roughly \(-0.3\%\) to \(+3.4\%\) in one run despite identical placement, demonstrating why small one-run timing differences are not interpreted.
 
+\section{Results}\label{results}
 
-  Some examples.  A paginated journal article \cite{Abril07}, an
-  enumerated journal article \cite{Cohen07}, a reference to an entire
-  issue \cite{JCohen96}, a monograph (whole book) \cite{Kosiur01}, a
-  monograph/whole book in a series (see 2a in spec. document)
-  \cite{Harel79}, a divisible-book such as an anthology or compilation
-  \cite{Editor00} followed by the same example, however we only output
-  the series if the volume number is given \cite{Editor00a} (so
-  Editor00a's series should NOT be present since it has no vol. no.),
-  a chapter in a divisible book \cite{Spector90}, a chapter in a
-  divisible book in a series \cite{Douglass98}, a multi-volume work as
-  book \cite{Knuth97}, a couple of articles in a proceedings (of a
-  conference, symposium, workshop for example) (paginated proceedings
-  article) \cite{Andler79, Hagerup1993}, a proceedings article with
-  all possible elements \cite{Smith10}, an example of an enumerated
-  proceedings article \cite{VanGundy07}, an informally published work
-  \cite{Harel78}, a couple of preprints \cite{Bornmann2019,
-    AnzarootPBM14}, a doctoral dissertation \cite{Clarkson85}, a
-  master's thesis: \cite{anisi03}, an online document / world wide web
-  resource \cite{Thornburg01, Ablamowicz07, Poker06}, a video game
-  (Case 1) \cite{Obama08} and (Case 2) \cite{Novak03} and \cite{Lee05}
-  and (Case 3) a patent \cite{JoeScientist001}, work accepted for
-  publication \cite{rous08}, 'YYYYb'-test for prolific author
-  \cite{SaeediMEJ10} and \cite{SaeediJETC10}. Other cites might
-  contain 'duplicate' DOI and URLs (some SIAM articles)
-  \cite{Kirschmer:2010:AEI:1958016.1958018}. Boris / Barbara Beeton:
-  multi-volume works as books \cite{MR781536} and \cite{MR781537}. A
-  presentation~\cite{Reiser2014}. An article under
-  review~\cite{Baggett2025}. A
-  couple of citations with DOIs:
-  \cite{2004:ITE:1009386.1010128,Kirschmer:2010:AEI:1958016.1958018}. Online
-  citations: \cite{TUGInstmem, Thornburg01, CTANacmart}.
-  Artifacts: \cite{R} and \cite{UMassCitations}.
+\subsection{Primary clean comparison}\label{clean-fresh-calibration-repeated-gate-isolation}
 
-\section{Acknowledgments}
+All 30 clean executions pass the provenance, completeness, correctness, calibration, and deterministic-mechanism checks. HEFT (H), prefix-safe (P), and no-prefix (N) share one fresh calibration per benchmark; P and N differ only in prefix admission. Table~\ref{tab:gate-triplet-repeat} reports direction-explicit ratios to avoid reciprocal ambiguity.
 
-Identification of funding sources and other support, and thanks to
-individuals and groups that assisted in the research and the
-preparation of the work should be included in an acknowledgment
-section, which is placed just before the reference section in your
-document.
+\begin{table*}[t]
+\centering
+\caption{Primary clean five-repeat result. Ranges are descriptive minima and maxima over five fixed-order pairs. ``N vs. P copy'' is N's additional modeled-copy reduction relative to P. Damage is cumulative positive modeled current-prefix damage across accepted decisions in one deterministic run, not wall-time or critical-path delay.}\label{tab:gate-triplet-repeat}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Benchmark & Median interval H / P / N (ms) & P vs. H geomean [observed range] & P copy reduction vs. H & Gate removal: winner; N vs. P copy; P/N damage (ms) \\
+\midrule
+Cholesky & 18,419.9 / 13,990.5 / 12,026.7 & P 1.315x [1.306, 1.321], 5/5 & 81.1\% & N 1.162x, 5/5; 75.8\%; 0 / 21.6 \\
+LU & 23,124.6 / 19,747.3 / 23,788.3 & P 1.171x [1.168, 1.176], 5/5 & 39.4\% & P 1.205x, 5/5; 95.7\%; 0 / 731.5 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
 
-This section has a special environment:
-\begin{verbatim}
-  \begin{acks}
-  ...
-  \end{acks}
-\end{verbatim}
-so that the information contained therein can be more easily collected
-during the article metadata extraction phase, and to ensure
-consistency in the spelling of the section heading.
+Prefix-safe beats HEFT in all ten pairs, with a 1.241x geomean over ten paired observations from the two selected configurations. Exact gate removal has opposite effects: it improves Cholesky in every pair but loses to prefix-safe on LU in every pair even while removing substantially more modeled copy. This is consistent with the gate rejecting a harmful aggressive policy on LU while conservatively rejecting profitable aggression on Cholesky. It supports an enforceable modeled-prefix invariant and workload-dependent risk control, not a chain detector or universal speedup mechanism.
 
-Authors should not prepare this section as a numbered or unnumbered {\verb|\section|}; please use the ``{\verb|acks|}'' environment.
+\subsection{One-run copy-model sensitivity}\label{semantic-bridge-and-one-run-sensitivity-diagnostics}
 
-\section{Appendices}
+After freezing the exact gate-only comparison, we varied only the scheduler's scalar copy parameter over 10.35, 20.7, and 41.4 GB/s. Each point in Figure~\ref{fig:prefix-gate-sensitivity} is one diagnostic observation with no uncertainty estimate; the values are model sensitivity, not measurements at three physical link bandwidths.
 
-If your work needs an appendix, add it before the
-``\verb|\end{document}|'' command at the conclusion of your source
-document.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.97\textwidth]{figures/prefix_gate_ablation.pdf}
+\Description{Prefix-safe versus exact gate removal at three scheduler copy-model bandwidths. Points are one-run diagnostics with no uncertainty estimate; dashed segments connect configurations that differ only in the prefix admission rule. LU exposes the protected-risk case, while Cholesky exposes the gate's conservative cost.}
+\caption{Prefix-safe versus exact gate removal at three scheduler copy-model bandwidths. Dashed segments connect configurations differing only in prefix admission. Each point is a one-run diagnostic.}\label{fig:prefix-gate-sensitivity}
+\end{figure*}
 
-Start the appendix with the ``\verb|appendix|'' command:
-\begin{verbatim}
-  \appendix
-\end{verbatim}
-and note that in the appendix, sections are lettered, not
-numbered. This document has two appendices, demonstrating the section
-and subsection identification method.
+Across the three model values, Cholesky prefix-safe remains 1.282--1.296x faster than HEFT and no-prefix remains 1.509--1.540x faster. LU prefix-safe remains 1.153--1.173x faster, whereas no-prefix remains below HEFT at 0.983--0.989x. This qualitative persistence supports, but does not statistically establish, the mixed risk-control interpretation.
 
-\section{Multi-language papers}
+\subsection{Scheduler cost and excluded evidence}\label{negative-findings-determine-the-verdict}
 
-Papers may be written in languages other than English or include
-titles, subtitles, keywords and abstracts in different languages (as a
-rule, a paper in a language other than English should include an
-English title and an English abstract).  Use \verb|language=...| for
-every language used in the paper.  The last language indicated is the
-main language of the paper.  For example, a French paper with
-additional titles and abstracts in English and German may start with
-the following command
-\begin{verbatim}
-\documentclass[sigconf, language=english, language=german,
-               language=french]{acmart}
-\end{verbatim}
+Every clean group misses our predeclared 5\% scheduler-share target in all five repeats. Median shares for H, P, and N are respectively 13.47\%, 13.10\%, and 15.40\% on Cholesky; on LU they are 10.87\%, 10.11\%, and 8.63\%. Summed scheduler times for H, P, and N are respectively 2485.8, 1832.3, and 1854.0 ms on Cholesky, and 2513.4, 1992.9, and 2054.4 ms on LU. The corresponding per-task costs are 10.337, 7.620, and 7.710 us on Cholesky, and 9.527, 7.554, and 7.787 us on LU. Prefix-safe is cheaper than HEFT in absolute scheduler time and per-task cost on both workloads, but its shorter benchmark interval still leaves the share above target. Thus the result is not incremental overhead caused by the prefix gate: the prototype scheduler path as a whole misses the target, and these measurements do not localize the cause.
 
-The title, subtitle, keywords and abstract will be typeset in the main
-language of the paper.  The commands \verb|\translatedXXX|, \verb|XXX|
-begin title, subtitle and keywords, can be used to set these elements
-in the other languages.  The environment \verb|translatedabstract| is
-used to set the translation of the abstract.  These commands and
-environment have a mandatory first argument: the language of the
-second argument.  See \verb|sample-sigconf-i13n.tex| file for examples
-of their usage.
+An older source snapshot supplies secondary baseline and neutral-MiniWeather context, while a one-run compatibility bridge verifies deterministic comparator semantics. Their calibration and binaries differ from the clean experiment, so none of their timings are pooled or used as headline performance. Standard-CG repeated performance is excluded because its same-path identity control failed. We also exclude a dense-DAG transfer diagnostic whose raw logs were not archived and a MiniWeather SALC diagnostic without an emitted executed SHA.
 
-%%
-%% The acknowledgments section is defined using the "acks" environment
-%% (and NOT an unnumbered section). This ensures the proper
-%% identification of the section in the article metadata, and the
-%% consistent spelling of the heading.
-\begin{acks}
-To Robert, for the bagels and explaining CMYK and color spaces.
-\end{acks}
+Finally, a one-read--write/unique-owner restriction covers every task in the selected dense configurations and produces the same placements as the broad method. It therefore does not identify chains; prefix-safe remains a broad locality refinement.
+
+\section{Limitations and Threats to Validity}\label{limitations-and-threats-to-validity}
+
+\textbf{Guarantee.} Prefix safety constrains only the modeled finish of placement decisions committed so far. SALC certifies one fixed-successor modeled inequality under a same-version/no-overwrite condition. Neither mechanism bounds an unscheduled suffix, proves global makespan improvement, or identifies a critical path.
+
+\textbf{Selection and arrival model.} The primary evidence uses two locality-sensitive dense configurations chosen after one-run exploration, not an unbiased benchmark survey. Both DAGs are fully materialized before deferred submission. Decisions are still made one task at a time, but the evaluation does not validate dynamic task arrival, and the positive SALC case relies on a graph-visible fixed successor. Results come from one 8-L4 node, one size per workload, and five repeats.
+
+\textbf{Statistics and baselines.} The fixed H--P--N order can correlate direction with machine drift; 5/5 consistency and the exact gate-only code delta are descriptive controlled evidence, not a randomized causal proof. The primary repeated matrix lacks a strong repeated weighted-copy or data-affinity baseline. We therefore claim improvement only over this runtime's HEFT baseline and use the no-prefix comparison to isolate the gate.
+
+\textbf{Copy and memory model.} One 20.7 GB/s scalar and GPU-0 task-cost calibration are shared across identical L4s. The model omits pairwise NODE/SYS bandwidth differences, contention, overlap, memory capacity, and eviction. Modeled bytes/time are not physical PCIe traffic, and the results do not cover oversubscription or out-of-core execution.
+
+\textbf{Traffic attribution.} Runtime-issued transfer accounting validates CUDASTF copy requests, not bus transactions. The controlled CG trace has no independent runtime version epoch, so its seven attributed requests are conditional on the task/data/fixed-successor join. CUPTI or equivalent profiling would be required for physical-link byte or time claims.
+
+\textbf{Scheduler cost.} All six groups miss our predeclared share target even though prefix-safe's absolute scheduler cost is lower than HEFT's. The measurements do not isolate whether candidate evaluation, residency bookkeeping, or other scheduler work dominates; lower-overhead implementation and broader validation remain future work.
+
+\section{Related Work}\label{related-work}
+
+\textbf{HEFT and bounded lookahead.} HEFT ranks a heterogeneous DAG and selects the processor that minimizes the current task's EFT, including communication that affects current input readiness \citep{topcuoglu2002heft}. PEFT augments this family with an optimistic future-cost table \citep{arabnejad2014peft}, while lookahead HEFT explicitly evaluates a placement's effect on child tasks \citep{bittencourt2010lookahead}. Anticipatory data-movement work similarly argues that future computation and I/O flows should inform movement decisions \citep{bleuse2018anticipation}. SALC is closest in spirit to one-hop lookahead, but its present certificate is narrower: one graph-visible fixed-device successor, runtime residency, and a HEFT-relative damage bound. Prefix-safe scheduling makes no successor prediction at all; it is a bounded online residual around the current HEFT choice.
+
+\textbf{Task runtimes and locality-aware scheduling.} StarPU \citep{augonnet2011starpu}, PaRSEC \citep{bosilca2013parsec}, Legion \citep{bauer2012legion}, and CUDASTF \citep{nvidia2026cudastf} expose different abstractions for task dependencies, placement, and automatic data management on heterogeneous systems. XKaapi's DADA affinity scheduler demonstrated that data-aware placement can substantially reduce transfers without sacrificing much performance \citep{bleuse2014dada}, and later comparisons evaluated HEFT alongside data- and locality-aware multi-CPU/multi-GPU schedulers \citep{lima2015strategies}. Recent work formalizes locality scheduling under GPU-memory constraints \citep{gonthier2023taming} and DARTS uses ready-task and bounded-future information to foster locality in GPU/out-of-core linear algebra \citep{gonthier2025darts}. We therefore do not claim first data-aware scheduling. The narrower contribution is a translation-invariant HEFT-prefix gate, a decision-attributed fixed-successor certificate, and explicit separation of repeated, diagnostic, and invalid evidence.
+
+\textbf{Transfer attribution.} HPCToolkit attributes GPU kernels and copies to heterogeneous calling contexts \citep{zhou2021hpctoolkit}. Our runtime-issued transfer stream serves a different diagnostic purpose: it joins scheduler decisions and logical-data identities to requested peer transfers. It does not replace a profiler and cannot establish physical PCIe transactions, overlap, or link time. The benchmark suite uses CUDASTF task graphs \citep{nvidia2026cudastf}; its sparse-CG path is related to the NAS CG kernel family \citep{bailey1991npb}, while MiniWeather adapts the public regional weather mini-app \citep{norman2020miniweather}.
+
+\section{Conclusion}\label{conclusion}
+
+A current-task EFT optimum can be a poor residency decision when a read--write placement moves the only valid version away from a future consumer. Prefix-safe copy-aware HEFT addresses this symptom without predicting the future graph: it accepts lower-copy placements only within numerical tolerance of the current modeled-prefix finish bound. On two selected dense configurations, prefix-safe beats the runtime HEFT baseline in all ten pairs, with a 1.241x geomean over the paired observations and zero modeled prefix damage.
+
+Exact gate removal helps Cholesky in every pair, while prefix-safe beats no-prefix on LU in every pair despite no-prefix removing substantially more modeled copy. The result supports a workload-dependent risk control, not a universal speedup mechanism. A fixed-successor SALC case goes one step closer to the motivating chain: one intervention conditionally eliminates seven attributed peer-copy requests and is followed by 27 downstream placement changes. It certifies the constructed one-hop inequality, not complete chain discovery or end-to-end causality.
+
+Every clean group also misses our predeclared 5\% scheduler-share target, including HEFT, while prefix-safe's absolute scheduler cost is lower than HEFT's. The present contribution is therefore an enforceable modeled invariant with positive selected-workload evidence and an explicit prototype-level deployment limitation. Dynamic-arrival evaluation, stronger repeated locality baselines, broader workloads and systems, and lower scheduler cost are required before making a general performance claim.
+
+\section*{Artifact Availability}\label{artifact-pointers}
+
+The implementation, harnesses, raw qualified results, and fail-closed verification scripts are prepared in a source-locked artifact. The clean 30-run result is separated from instrumented forensic and provenance-incomplete diagnostics. A public immutable archive URL and final source tag will be inserted before submission.
 
 
-\section*{Ethics and Privacy Statement}
-
-This section of your ACM work should discuss the potential societal
-risks that might result from its publication; two to three sentences
-related to the findings of your study, or new advancements made
-possible by their developed methods. The privacy and ethics statement
-should clearly address the broader impacts of their work as it relates
-to the authors' interpretation of privacy, fairness, safety, human
-rights, data sovereignty, or future misuse and any benefit/risk
-trade-off resulting from this research. We acknowledge that some
-papers may have minimal societal risks beyond those considered by
-institutional review boards, and the dimensions considered by any
-review of the user study design or dataset licenses could be provided
-in this statement.
-
-%%
-%% The next two lines define the bibliography style to be used, and
-%% the bibliography file.
 \bibliographystyle{ACM-Reference-Format}
-\bibliography{sample-base}
-
-
-%%
-%% If your work has an appendix, this is the place to put it.
-\appendix
-
-\section{Research Methods}
-
-\subsection{Part One}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi
-malesuada, quam in pulvinar varius, metus nunc fermentum urna, id
-sollicitudin purus odio sit amet enim. Aliquam ullamcorper eu ipsum
-vel mollis. Curabitur quis dictum nisl. Phasellus vel semper risus, et
-lacinia dolor. Integer ultricies commodo sem nec semper.
-
-\subsection{Part Two}
-
-Etiam commodo feugiat nisl pulvinar pellentesque. Etiam auctor sodales
-ligula, non varius nibh pulvinar semper. Suspendisse nec lectus non
-ipsum convallis congue hendrerit vitae sapien. Donec at laoreet
-eros. Vivamus non purus placerat, scelerisque diam eu, cursus
-ante. Etiam aliquam tortor auctor efficitur mattis.
-
-\section{Online Resources}
-
-Nam id fermentum dui. Suspendisse sagittis tortor a nulla mollis, in
-pulvinar ex pretium. Sed interdum orci quis metus euismod, et sagittis
-enim maximus. Vestibulum gravida massa ut felis suscipit
-congue. Quisque mattis elit a risus ultrices commodo venenatis eget
-dui. Etiam sagittis eleifend elementum.
-
-Nam interdum magna at lectus dignissim, ac dignissim lorem
-rhoncus. Maecenas eu arcu ac neque placerat aliquam. Nunc pulvinar
-massa et mattis lacinia.
-
+\bibliography{references}
+% Absorb balance.sty's sub-baseline rounding on the short final page.
+\par\kern2.4pt
 \end{document}
-\endinput
-%%
-%% End of file `sigconf.tex'.
