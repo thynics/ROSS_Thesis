@@ -12,7 +12,7 @@ The draft uses the repository's ACM `sigconf` template and includes:
 - the formal HEFT--MSI locality-conflict construction;
 - prefix-safe copy-aware HEFT and its exact no-prefix ablation;
 - the controlled fixed-successor SALC certificate;
-- the qualified clean 30-run Cholesky/LU gate triplet;
+- the qualified clean 30-run gate triplet as two strong HEFT--MSI opportunity observations;
 - one-run copy-model sensitivity with explicit evidence boundaries;
 - two vector figures and a 15-entry bibliography.
 
@@ -22,9 +22,14 @@ The primary clean result is source-locked to
 retains the negative deployment result that every clean scheduler group exceeds
 the 5% scheduler-share target.
 
-The two dense configurations were selected after exploration and use deferred,
-fully materialized DAG submission. The paper therefore claims a controlled
-selected-workload result, not prevalence across applications or validation of
+Prefix-safe scheduling is presented as a general admission rule for the
+HEFT--MSI conflict, not as a Cholesky/LU-specific policy. The current strongest
+repeated evidence comes from two dense configurations selected after
+exploration, so their speedups are condition-specific evidence rather than an
+estimate of prevalence across applications. The ongoing expanded five-workload
+confirmation is designed to separate actionable opportunities, safe weak/no-opportunity
+cases, and gate-removal over-optimization. All current configurations use
+deferred, fully materialized DAG submission and therefore do not validate
 dynamic task arrival.
 
 ## Remaining metadata
