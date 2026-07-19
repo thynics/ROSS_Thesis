@@ -32,6 +32,12 @@ cases, and gate-removal over-optimization. All current configurations use
 deferred, fully materialized DAG submission and therefore do not validate
 dynamic task arrival.
 
+The expanded analysis freezes its interpretation bands before results are
+read: geomean speedup at least 1.03x is material, 0.97x to below 1.03x is
+neutral/non-degrading, and below 0.97x is a reported regression. A positive
+reduction in scheduler-modeled copy bytes is evaluated separately as the
+mechanism-opportunity signal.
+
 ## Remaining metadata
 
 ROSS is single-blind. Replace the explicit author, affiliation, city, country,
