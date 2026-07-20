@@ -32,6 +32,14 @@ cases, and gate-removal over-optimization. All current configurations use
 deferred, fully materialized DAG submission and therefore do not validate
 dynamic task arrival.
 
+The expanded protocol is one current-source 75-run block: five workloads
+(FDTD, standard CG, Cholesky, LU, and MiniWeather), three exact gate variants,
+and five repeats. It uses the pre-performance `scalar_microkernel_v2`
+calibration rule: ordinary tasks retain the 7/9 inlier requirement, while only
+launch-bound tasks with at most 24 bytes of footprint and a median below
+0.050 ms use a 6/9 central-majority requirement plus the unchanged scaled-MAD
+gate. Its timings are not pooled with the historical 30-run block.
+
 The expanded analysis freezes its interpretation bands before results are
 read: geomean speedup at least 1.03x is material, 0.97x to below 1.03x is
 neutral/non-degrading, and below 0.97x is a reported regression. A positive
