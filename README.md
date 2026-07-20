@@ -46,6 +46,12 @@ neutral/non-degrading, and below 0.97x is a reported regression. A positive
 reduction in scheduler-modeled copy bytes is evaluated separately as the
 mechanism-opportunity signal.
 
+Gate effect is also predeclared as a direct paired prefix-safe versus no-prefix
+comparison. A 1.03x geomean in either direction is material: prefix-safe winning
+with a more aggressive no-prefix copy reduction is an over-optimization
+counterexample, while no-prefix winning is reported as conservative gate cost.
+Neither outcome changes the independent HEFT-relative problem classification.
+
 ## Remaining metadata
 
 ROSS is single-blind. Replace the explicit author, affiliation, city, country,
