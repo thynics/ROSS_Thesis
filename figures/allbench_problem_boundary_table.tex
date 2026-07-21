@@ -3,18 +3,18 @@
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\caption{Problem-oriented five-workload result. P/H is paired HEFT-relative geomean speedup; modeled-copy opportunity and latency response are classified independently. A neutral or negative observation is retained as part of the method boundary.}
+\caption{Five-workload result. P/H and $T_N/T_P$ are paired geomean timing ratios. Identical H/P/N placement digests and copy totals make a row a timing control: its ratio cannot be attributed to a locality-placement decision.}
 \label{tab:allbench-problem-boundary}
-\begin{tabularx}{\textwidth}{@{}lrrrr>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\begin{tabularx}{\textwidth}{@{}lrr>{\raggedright\arraybackslash}p{0.13\textwidth}r>{\raggedright\arraybackslash}X@{}}
 \toprule
-Workload & P/H & Copy reduction & P material & $T_N/T_P$ & Problem condition & Gate evidence \\
+Workload & P/H & P copy reduction & H/P/N placement & $T_N/T_P$ & Interpretation \\
 \midrule
-FDTD & 1.064x & 0.0\% & 3/5 & 0.922x & gain without copy signal (material improvement) & no additional gate signal \\
-CG & 1.005x & 0.0\% & 0/5 & 1.001x & no opportunity; safe (neutral/non-degrading) & no additional gate signal \\
-Cholesky & 1.405x & 85.8\% & 5/5 & 0.920x & opportunity; effective (material improvement) & conservative gate cost \\
-LU & 1.173x & 38.8\% & 5/5 & 1.208x & opportunity; effective (material improvement) & over-optimization counterexample \\
-MiniWeather & 0.982x & 0.0\% & 0/5 & 0.991x & no opportunity; safe (neutral/non-degrading) & no additional gate signal \\
+FDTD & 1.064x & 0.0\% & identical & 0.922x & scheduler-path/order/system timing control \\
+CG & 1.005x & 0.0\% & identical & 1.001x & scheduler-path/order/system timing control \\
+Cholesky & 1.405x & 85.8\% & different & 0.920x & opportunity; effective; conservative gate cost \\
+LU & 1.173x & 38.8\% & different & 1.208x & opportunity; effective; over-optimization counterexample \\
+MiniWeather & 0.982x & 0.0\% & identical & 0.991x & scheduler-path/order/system timing control \\
 \bottomrule
 \end{tabularx}
-\vspace{2pt}\par\scriptsize Positive copy reduction is the independent modeled-opportunity signal. $T_N/T_P>1$ favors prefix safety; $<1$ favors exact gate removal. Copy quantities are scheduler-model outputs, not measured link traffic.
+\vspace{2pt}\par\scriptsize Positive copy reduction is the independent modeled-opportunity signal. $T_N/T_P>1$ favors prefix safety; $<1$ favors exact gate removal. Copy quantities are scheduler-model outputs, not measured link traffic. Timing ratios in identical-placement rows quantify run-order/system variation only.
 \end{table*}
