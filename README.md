@@ -12,36 +12,37 @@ The draft uses the repository's ACM `sigconf` template and includes:
 - the formal HEFT--MSI locality-conflict construction;
 - prefix-safe copy-aware HEFT and its exact no-prefix ablation;
 - the controlled fixed-successor SALC certificate;
-- the qualified 75-run five-workload problem-boundary matrix;
+- the qualified 180-run, six-treatment, Williams-counterbalanced matrix;
 - the historical clean 30-run gate triplet as supporting strong-opportunity evidence;
 - one-run copy-model sensitivity with explicit evidence boundaries;
-- two vector figures and a 15-entry bibliography.
+- two vector figures and a fully specified bibliography.
 
 The primary clean result is source-locked to
-`673f8c19d73280be02733b806285339ee8699950` and contains all 75 expected
+`e3cfeaf36b6a8e3c4b3a1754270aa2ecde09647a` and contains all 180 expected
 executions. Cholesky and LU are the two effective modeled-copy-opportunity
-cases; CG and MiniWeather are neutral/non-degrading no-opportunity controls;
-FDTD's latency gain has no modeled-copy signal and is retained without being
-counted as mechanism evidence. No workload-level geomean regresses. Eleven of
-the fifteen primary workload--scheduler group medians exceed the 5% scheduler-
-share target, while all three CG groups and MiniWeather no-prefix meet it.
+cases; FDTD, CG, and MiniWeather are H/P/N placement- and copy-identical timing
+controls. Prefix-safe improves over HEFT by 1.313x and 1.177x on Cholesky and
+LU, respectively, and is compared against global weighted-copy and unique-
+owner locality baselines. Nineteen of the thirty workload--scheduler group
+medians exceed the 5% scheduler-share target, while all six CG groups meet it.
 
 Prefix-safe scheduling is presented as a general admission rule for the
 HEFT--MSI conflict, not as a Cholesky/LU-specific policy. The strongest repeated
 speedups still come from two dense configurations selected after exploration,
 so they are condition-specific evidence rather than an estimate of prevalence.
 The completed five-workload confirmation separates actionable opportunities,
-safe no-opportunity cases, a gain without mechanism signal, and gate-removal
-over-optimization. All current configurations use deferred, fully materialized
-DAG submission and therefore do not validate dynamic task arrival.
+identical-decision controls, simple locality baselines, conservative gate cost,
+and gate-removal over-optimization. All current configurations use deferred,
+fully materialized DAG submission and therefore do not validate dynamic task
+arrival.
 
-The primary protocol is one current-source 75-run block: five workloads
-(FDTD, standard CG, Cholesky, LU, and MiniWeather), three exact gate variants,
-and five repeats. It uses the pre-performance `scalar_microkernel_v2`
-calibration rule: ordinary tasks retain the 7/9 inlier requirement, while only
-launch-bound tasks with at most 24 bytes of footprint and a median below
-0.050 ms use a 6/9 central-majority requirement plus the unchanged scaled-MAD
-gate. Its timings are not pooled with the historical 30-run block.
+The primary protocol is one current-source 180-run block: five workloads
+(FDTD, standard CG, Cholesky, LU, and MiniWeather), six treatments, and six
+repeat blocks. Within each workload, the six-sequence Williams design assigns
+every treatment to every order position once and balances every distinct
+directed first-order adjacency once. The strict calibration rule requires 7/9
+inliers plus the scaled-MAD gate. Its timings are not pooled with the historical
+30-run block.
 
 The primary analysis froze its interpretation bands before unified results
 were read: geomean speedup at least 1.03x is material, 0.97x to below 1.03x is
@@ -58,8 +59,10 @@ Neither outcome changes the independent HEFT-relative problem classification.
 ## Remaining metadata
 
 ROSS is single-blind. Replace the explicit author, affiliation, city, country,
-and email placeholders in `sigconf.tex` before submission. A public, immutable
-artifact URL and final source tag must also replace the artifact placeholder.
+and email placeholders in `sigconf.tex` before submission. The manuscript now
+links the immutable result-bearing artifact commit
+`58cb4c57a3279d79f7b2205d5eb42a1016e53425`; confirm that the repository is
+publicly readable by reviewers before submission.
 
 ## Local build
 

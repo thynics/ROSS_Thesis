@@ -6,4 +6,6 @@
 *.log
 *.out
 *.synctex.gz
+*.cut
+/sigconf.pdf
 tmp/

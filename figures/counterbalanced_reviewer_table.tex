@@ -1,0 +1,20 @@
+% Generated from the qualified counterbalanced reviewer analysis.
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Counterbalanced six-treatment result. Ratios greater than one favor P. Each treatment occupies every block and order position once.}
+\label{tab:counterbalanced-baselines}
+\begin{tabularx}{\textwidth}{@{}lrrrrr>{\raggedright\arraybackslash}X@{}}
+\toprule
+Workload & P/H & P/W & P/O & P/N & P copy reduction & Interpretation \\
+\midrule
+FDTD & 1.022x & 1.057x & 0.942x & 1.002x & 0.0\% & identical H/P/N timing control; all six placements identical \\
+CG & 0.997x & 1.841x & 1.002x & 0.998x & 0.0\% & identical H/P/N timing control; W changes placement without reducing copy \\
+Cholesky & 1.313x & 1.239x & 1.248x & 0.861x & 81.0\% & effective opportunity; gate conservative \\
+LU & 1.177x & 1.020x & 1.055x & 1.210x & 38.8\% & effective opportunity; gate protective \\
+MiniWeather & 1.000x & 0.997x & 1.008x & 1.004x & 0.0\% & identical H/P/N timing control; all six placements identical \\
+\bottomrule
+\end{tabularx}
+\vspace{2pt}\par\scriptsize P/H is HEFT time divided by prefix-safe time; P/W and P/O use global weighted-copy and unique-owner locality baselines; P/N uses exact gate removal. Copy reduction is relative to H and denotes scheduler-modeled bytes, not measured link traffic. Timing ratios do not receive algorithmic interpretations when the compared placement and copy outputs are identical.
+\end{table*}
