@@ -29,7 +29,7 @@
 \begin{abstract}
 The HEFT-style device selector in CUDASTF accounts for communication that delays the current task, yet a favorable read--write placement can move the unique valid version of an object and induce larger successor traffic under the runtime's software MSI-style residency bookkeeping. We formalize this placement--residency conflict and its \emph{prefix-admissible} subclass, then introduce \textbf{prefix-safe copy-aware placement}: a lower-copy alternative is eligible only when it preserves the modeled finish of already committed placement decisions, up to a \(10^{-6}\) ms tolerance. The method predicts no unscheduled suffix, does not alter the runtime-supplied task order, and deliberately leaves non-admissible conflicts unchanged.
 
-A qualified 180-run matrix covers five workloads on one 8-GPU NVIDIA L4 node. Within each workload, a six-sequence Williams design balances HEFT (H), a same-path identity control (I), two transparent locality baselines (W and O), prefix-safe placement (P), and exact gate removal (N) for block, position, and first-order carryover. On the two workloads where P changes placement and reduces modeled copy, Cholesky and LU, it cuts modeled copy by 81.0\% and 38.8\% and improves latency over H by 1.313x and 1.177x. P is respectively 1.239x/1.248x faster than W/O on Cholesky and 1.020x/1.055x faster on LU; the 1.020x result is below our predeclared 1.03x materiality threshold. H, P, and N are placement- and copy-identical on FDTD, CG, and MiniWeather, so their timing ratios are controls rather than locality effects. N is 1.161x faster than P on Cholesky, exposing conservative gate cost, whereas P is 1.210x faster than N on LU despite N removing more copy, exposing harmful over-optimization. Nineteen of thirty workload--scheduler group medians miss our predeclared 5\% scheduler-share target, a prototype limitation. A separate controlled fixed-successor trace confirms the motivating migrate--return mechanism but is not used as performance evidence.
+A qualified 180-run matrix covers five workloads on one 8-GPU NVIDIA L4 node. Within each workload, a Williams design balances HEFT (H), a same-path identity control (I), two transparent locality baselines (W and O), prefix-safe placement (P), and exact gate removal (N) for block, position, and first-order carryover. On the two workloads where P changes placement, Cholesky and LU, it reduces modeled copy by 81.0\% and 38.8\% and improves latency over H by 1.313x and 1.177x. P materially outperforms both locality baselines on Cholesky and the owner baseline on LU; it is within the predeclared neutral range of the weighted baseline on LU. Gate removal exposes both sides of the safety--opportunity tradeoff: it helps Cholesky but harms LU. The other three workloads retain identical H/P/N placements and serve as timing controls. Nineteen of thirty workload--scheduler group medians miss our predeclared 5\% scheduler-share target, a prototype limitation. A separate controlled fixed-successor trace confirms the motivating migrate--return mechanism but is not used as performance evidence.
 
 \end{abstract}
 \ccsdesc[500]{Computer systems organization~Heterogeneous (hybrid) systems}
@@ -242,24 +242,24 @@ We constructed a controlled residual-audit path inside CG to realize the formal 
 
 The corrected fixed-anchor SALC implementation makes exactly one direct intervention: task 46 stays on GPU 0. Its one-copy future lower bound is 6.483948 ms, its HEFT-relative EFT damage is 0.474260 ms, and the certificate is therefore 6.009688 ms. Replaying the independently recorded HEFT decisions shows 28 final placement differences: the direct task plus 27 downstream cascade changes.
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
-\caption{Controlled CG-derived fixed-successor certificate.}\label{tab:controlled-cg-certificate}
+\caption{Controlled fixed-successor mechanism trace. Traffic values use binary units.}\label{tab:controlled-cg-certificate}
 \footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabularx}{\columnwidth}{@{}>{\raggedright\arraybackslash}Xrr@{}}
 \toprule
-Controlled trace property & HEFT & Fixed-successor SALC \\
+Metric & H & SALC \\
 \midrule
-Direct residual interventions & 0 & 1 (task 46, GPU 1 -> GPU 0) \\
-Modeled owner round trips & 1 & 0 \\
-Target runtime-issued GPU-peer bytes & 939,524,096 & 0 \\
-Total runtime-issued GPU-peer bytes & 2,684,355,048 & 480 \\
-All runtime-issued transfer bytes & 4,563,403,232 & 939,524,592 \\
-Relative residual correctness gap & PASS & 2.3954e-16 (PASS) \\
+Direct interventions & 0 & 1 \\
+Owner round trips & 1 & 0 \\
+Target peer traffic & 896 MiB & 0 \\
+All peer traffic & 2.50 GiB & 480 B \\
+All issued traffic & 4.25 GiB & 896 MiB \\
+Correctness & PASS & PASS \\
 \bottomrule
 \end{tabularx}
-\end{table*}
+\end{table}
 
 The remaining 480 peer bytes under SALC are scalar traffic unrelated to the target. Target peer bytes fall by 100\%, total peer bytes by 99.99998\%, and all runtime-issued bytes by 79.41\%. The artifact verifier joins task/data identity with the fixed-successor interval and recomputes SALC's placement digest; runtime rows do not contain an independent data-version epoch, so attribution is explicitly conditional rather than overstated.
 
@@ -276,24 +276,24 @@ The observations are single, instrumented, and split across two pinned task wrap
 
 \subsection{Platform, workloads, and schedulers}\label{platform-workloads-and-schedulers}
 
-The primary counterbalanced matrix executed source \texttt{e3cfeaf3\allowbreak{}6b6a8e3c\allowbreak{}4b3a1754\allowbreak{}270aa2ec\allowbreak{}de09647a} on one dual-NUMA Europa node with eight NVIDIA L4 GPUs (23,034 MiB each), driver 595.71.05, CUDA 12.4.131, GCC 13.3.0, CMake 4.3.4, CUDASTF 3.2.0.0, and a C++17 Release build. The historical strong-opportunity confirmation executed source \texttt{cfdd6d1f\allowbreak{}f8f1c45c\allowbreak{}8c9c0da6\allowbreak{}2a859452\allowbreak{}dce09b86} on the same platform. GPUs 0--3 and 4--7 form separate NUMA-local PCIe groups; cross-group traffic traverses the system interconnect. A nearby metadata snapshot identifies a dual-socket Intel Xeon Gold 6548N host, but its clock and persistence readings are not treated as steady-state attestations.
+The primary matrix ran on one dual-NUMA Europa node with eight NVIDIA L4 GPUs (23,034 MiB each), driver 595.71.05, CUDA 12.4.131, GCC 13.3.0, CMake 4.3.4, CUDASTF 3.2.0.0, and a C++17 Release build. The supporting replication used an earlier, source-distinct snapshot on the same platform; the artifact manifest binds every result to its exact source revision. GPUs 0--3 and 4--7 form separate NUMA-local PCIe groups; cross-group traffic traverses the system interconnect. A nearby metadata snapshot identifies a dual-socket Intel Xeon Gold 6548N host, but its clock and persistence readings are not treated as steady-state attestations.
 
 The scheduler uses one scalar 20.7 GB/s copy parameter, derived from a complete directed-pair microbenchmark with 20.726 GB/s median. It does not model the NODE/SYS pair distinction, contention, or copy/compute overlap. Robust task-cost calibration runs on GPU 0 and is then shared across the eight identical L4s.
 
 \begin{table*}[t]
 \centering
-\caption{Workload configurations and validation contracts.}\label{tab:workloads}
+\caption{Workload configurations and correctness contracts. All workloads use FP64.}\label{tab:workloads}
 \footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{0.29\textwidth}r>{\raggedright\arraybackslash}X@{}}
 \toprule
-Workload & Arguments & Precision & Submitted tasks & Structure and validation \\
+Workload & Configuration & Tasks & Correctness contract \\
 \midrule
-FDTD & \texttt{\detokenize{672 64 64 64}} & FP64 & 4,704 & 3-D electromagnetic stencil; finalized host \(E_z\) checksum and norms \\
-Cholesky & \texttt{\detokenize{28672 256}} & FP64 & 240,464 & 112 x 112 tiled dense factorization; projected backward error and checksum \\
-LU decomposition & \texttt{\detokenize{23552 256}} & FP64 & 263,810 & 92 x 92 tiled no-pivot factorization; projected residual and checksum \\
-MiniWeather & \texttt{\detokenize{1536 2048 1536}} & FP64 & 55,296 & six independent finite-horizon regional RK3 chains; finalized changed-state checksum \\
-Standard CG & \texttt{\detokenize{16777216 40 10}} & FP64 & 3,040 & 40 static contexts with bounded iterations and finalized checksum; one historical identity-control block is excluded \\
+FDTD & 672 steps; \(64^3\) grid & 4,704 & Final-state \(E_z\) checksum and norms \\
+Cholesky & \(n=28{,}672\), tile \(=256\) (\(112^2\) tiles) & 240,464 & Projected backward error and checksum \\
+LU & \(n=23{,}552\), tile \(=256\) (\(92^2\) tiles) & 263,810 & Projected residual and checksum \\
+MiniWeather & 1,536 steps; \(2048\times1536\) grid & 55,296 & Final changed-state checksum \\
+CG & \(n=2^{24}\), 40 repeats, at most 10 iterations & 3,040 & Final checksum \\
 \bottomrule
 \end{tabularx}
 \end{table*}
@@ -330,11 +330,12 @@ I exactly reproduces H task and dependency-check counts, placement digest, model
 
 \input{figures/counterbalanced_reviewer_table.tex}
 
-Table~\ref{tab:counterbalanced-baselines} reports the opportunity and placement boundary. Cholesky and LU are the only H/P different-placement cases. P reduces scheduler-modeled copy from 128.55 to 24.41 GB on Cholesky (81.0\%) and from 148.77 to 90.98 GB on LU (38.8\%). P/H is 1.313x on Cholesky (six of six pairs, range 1.296--1.324x) and 1.177x on LU (six of six, 1.171--1.186x). This is positive evidence for the remedy when a prefix-admissible HEFT--MSI opportunity is observed, not evidence that the method targets two benchmark names.
+Table~\ref{tab:counterbalanced-baselines} isolates the two cases in which P changes H's placement. P reduces scheduler-modeled copy from 128.55 to 24.41 GB on Cholesky (81.0\%) and from 148.77 to 90.98 GB on LU (38.8\%). The corresponding P/H speedups are 1.313x (range 1.296--1.324x) and 1.177x (1.171--1.186x); all six pairs agree in each case. This is positive evidence for the remedy when a prefix-admissible HEFT--MSI opportunity is observed, not a prevalence claim about the two benchmark names.
 
-The simpler locality baselines do not explain away the result. On Cholesky, P is 1.239x faster than W and 1.248x faster than O, again in all six pairs; its 24.41 GB modeled copy is far below W's 116.20 GB and O's 113.46 GB. On LU, P is 1.020x faster than W and 1.055x faster than O in all six pairs. We call the former competitive, not materially faster, because 1.020x is below the frozen 1.03x threshold. P still models less copy than W (96.28 GB) or O (96.14 GB). Conversely, W changes CG placement without reducing its 42.95 GB modeled copy and is 1.841x slower than P. This negative control shows why indiscriminate copy weighting is not a sufficient substitute for bounded admission.
+The simpler locality baselines do not explain away the result. P materially outperforms W and O on Cholesky and O on LU. Its 1.020x LU advantage over W is below the frozen 1.03x threshold and is therefore competitive rather than material. P also models less copy than either baseline in both cases. Conversely, W changes CG placement without reducing its 42.95 GB modeled copy and is 1.841x slower than P, showing why indiscriminate copy weighting is not a sufficient substitute for bounded admission.
 
-FDTD, CG, and MiniWeather have identical H/P/N placement digests and modeled-copy totals. FDTD and MiniWeather also have identical outputs for all six treatments. Their P/H ratios (1.022x, 0.997x, and 1.000x) and P/N ratios (1.002x, 0.998x, and 1.004x) are timing controls, not locality effects. FDTD's six P/H ratios span 0.801--1.157x despite identical decisions, exposing the instability of this short interval. We therefore make neither locality-speedup nor universal non-regression claims from these rows.
+\paragraph{Unchanged-placement controls.}
+FDTD, CG, and MiniWeather have identical H/P/N placement digests and modeled-copy totals. Their P/H ratios are 1.022x, 0.997x, and 1.000x; their P/N ratios are 1.002x, 0.998x, and 1.004x. These are timing controls, not locality effects. FDTD's six P/H ratios span 0.801--1.157x despite identical decisions, exposing the instability of this short interval. We therefore make neither locality-speedup nor universal non-regression claims from these observations.
 
 Exact gate removal separates conservative cost from protection. On Cholesky, P/N is 0.861x, so N is 1.161x faster in all six pairs and reduces modeled copy further to 5.90 GB; the gate is conservative in this observation. On LU, P/N is 1.210x in all six pairs even though N reduces modeled copy to 3.88 GB and accumulates 732.3 ms of modeled-prefix damage. LU is therefore an over-optimization counterexample. The same benchmark-independent predicate can reject a profitable aggressive choice in one state distribution and a harmful one in another; this is the intended condition-dependent boundary.
 
@@ -359,7 +360,7 @@ Across the three model values, Cholesky prefix-safe remains 1.282--1.296x faster
 
 In the primary matrix, eleven of thirty workload--scheduler group medians meet our predeclared 5\% scheduler-share target and nineteen miss it. All six CG groups meet it; five of six MiniWeather groups meet it, with H the exception. Every group median for FDTD, Cholesky, and LU is above target. P's median shares are 25.39\%, 0.414\%, 13.10\%, 10.13\%, and 4.98\% for FDTD, CG, Cholesky, LU, and MiniWeather. Its measured scheduling cost is 7.55--16.70 \(\mu\)s per task and its total measured scheduler time is lower than H on every workload, but short benchmark intervals and improved dense-workload latency can still leave the ratio above target. The result is workload-dependent prototype cost, not universal incremental overhead caused by the prefix gate, and these measurements do not localize the cause. All six historical group medians also miss the target.
 
-An older source snapshot supplies secondary baseline and neutral-MiniWeather context, while a one-run compatibility bridge verifies deterministic comparator semantics. Their calibration and binaries differ from the clean experiment, so none of their timings are pooled or used as headline performance. Standard-CG performance from the historical same-path block is excluded because its identity control failed. We also exclude a dense-DAG transfer diagnostic whose raw logs were not archived and a MiniWeather SALC diagnostic without an emitted executed SHA.
+An older source snapshot supplies secondary baseline and neutral-MiniWeather context, while a one-run compatibility bridge verifies deterministic comparator semantics. Their calibration and binaries differ from the clean experiment, so none of their timings are pooled or used as headline performance. Standard-CG performance from the historical same-path block is excluded because its identity control failed. We also exclude a dense-DAG transfer diagnostic whose raw logs were not archived and a MiniWeather SALC diagnostic without verifiable source provenance.
 
 Finally, a one-read--write/unique-owner restriction covers every task in the two dense observations and produces the same placements as the broad method. It therefore does not identify chains; prefix-safe remains a general locality refinement rather than a dense-DAG special case.
 
@@ -399,7 +400,7 @@ OpenAI Codex assisted with adversarial manuscript review, experiment-protocol dr
 
 \section*{Artifact Availability}\label{artifact-pointers}
 
-The implementation, harnesses, 180-run counterbalanced primary matrix, historical 30-run supporting block, raw qualified results, generated interpretation tables, and fail-closed verification scripts are preserved at result-bearing commit \texttt{58cb4c57a}. Its manifest records the full source-under-test SHA beginning \texttt{e3cfeaf3}; primary and historical timings remain separate from instrumented forensic and provenance-incomplete diagnostics. The working repository is presently access-controlled, so a reviewer-accessible archival URL must replace this sentence before submission.
+The implementation, harnesses, 180-run counterbalanced primary matrix, historical 30-run supporting block, raw qualified results, generated interpretation tables, and fail-closed verification scripts are preserved together. A machine-readable manifest records exact source and result revisions while keeping primary timings separate from instrumented forensic and provenance-incomplete diagnostics. The working repository is presently access-controlled, so a reviewer-accessible archival URL must replace this sentence before submission.
 
 
 \bibliographystyle{ACM-Reference-Format}
