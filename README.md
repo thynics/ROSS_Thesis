@@ -59,10 +59,11 @@ Neither outcome changes the independent HEFT-relative problem classification.
 ## Remaining metadata
 
 ROSS is single-blind. Replace the explicit author, affiliation, city, country,
-and email placeholders in `sigconf.tex` before submission. The manuscript now
-links the immutable result-bearing artifact commit
-`58cb4c57a3279d79f7b2205d5eb42a1016e53425`; confirm that the repository is
-publicly readable by reviewers before submission.
+and email placeholders in `sigconf.tex` before submission. The result-bearing
+artifact commit is `58cb4c57a3279d79f7b2205d5eb42a1016e53425`, but an anonymous HTTP
+request to the code repository returned 404 on 2026-07-21. Publish a reviewer-
+accessible archive and replace the explicit access-controlled notice in the
+manuscript before submission.
 
 ## Local build
 

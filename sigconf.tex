@@ -322,7 +322,7 @@ Scheduler share is the sum of measured per-task scheduler decision time divided 
 
 \subsection{Control validity}\label{fail-closed-identity-boundary}
 
-I exactly reproduces H placement, modeled copy, graph shape, and correctness for all 30 workload--block pairs. Its I/H geomeans are 1.024x (FDTD), 1.001x (CG), 1.035x (Cholesky), 1.018x (LU), and 1.000x (MiniWeather). These nonzero same-decision differences quantify scheduler-path and residual system effects; in particular, Cholesky crosses the 1.03x threshold without changing placement. Independently, H/P/N are placement- and copy-identical on FDTD, CG, and MiniWeather. We consequently apply algorithmic labels only when the compared mechanism outputs differ.
+I exactly reproduces H task and dependency-check counts, placement digest, modeled-copy accounting, scheduler-context count, and correctness checksum for all 30 workload--block pairs. Its I/H geomeans are 1.024x (FDTD), 1.001x (CG), 1.035x (Cholesky), 1.018x (LU), and 1.000x (MiniWeather). These nonzero same-decision differences quantify scheduler-path and residual system effects; in particular, Cholesky crosses the 1.03x threshold without changing placement. Independently, H/P/N are placement- and copy-identical on FDTD, CG, and MiniWeather. We consequently apply algorithmic labels only when the compared mechanism outputs differ.
 
 \section{Results}\label{results}
 
@@ -334,7 +334,7 @@ Table~\ref{tab:counterbalanced-baselines} reports the opportunity and placement 
 
 The simpler locality baselines do not explain away the result. On Cholesky, P is 1.239x faster than W and 1.248x faster than O, again in all six pairs; its 24.41 GB modeled copy is far below W's 116.20 GB and O's 113.46 GB. On LU, P is 1.020x faster than W and 1.055x faster than O in all six pairs. We call the former competitive, not materially faster, because 1.020x is below the frozen 1.03x threshold. P still models less copy than W (96.28 GB) or O (96.14 GB). Conversely, W changes CG placement without reducing its 42.95 GB modeled copy and is 1.841x slower than P. This negative control shows why indiscriminate copy weighting is not a sufficient substitute for bounded admission.
 
-FDTD, CG, and MiniWeather have identical H/P/N placement digests and modeled-copy totals. FDTD and MiniWeather also have identical outputs for all six treatments. Their P/H ratios (1.022x, 0.997x, and 1.000x) and P/N ratios (1.002x, 0.998x, and 1.004x) are timing controls, not locality effects. We therefore make neither locality-speedup nor universal non-regression claims from these rows.
+FDTD, CG, and MiniWeather have identical H/P/N placement digests and modeled-copy totals. FDTD and MiniWeather also have identical outputs for all six treatments. Their P/H ratios (1.022x, 0.997x, and 1.000x) and P/N ratios (1.002x, 0.998x, and 1.004x) are timing controls, not locality effects. FDTD's six P/H ratios span 0.801--1.157x despite identical decisions, exposing the instability of this short interval. We therefore make neither locality-speedup nor universal non-regression claims from these rows.
 
 Exact gate removal separates conservative cost from protection. On Cholesky, P/N is 0.861x, so N is 1.161x faster in all six pairs and reduces modeled copy further to 5.90 GB; the gate is conservative in this observation. On LU, P/N is 1.210x in all six pairs even though N reduces modeled copy to 3.88 GB and accumulates 732.3 ms of modeled-prefix damage. LU is therefore an over-optimization counterexample. The same benchmark-independent predicate can reject a profitable aggressive choice in one state distribution and a harmful one in another; this is the intended condition-dependent boundary.
 
@@ -399,7 +399,7 @@ OpenAI Codex assisted with adversarial manuscript review, experiment-protocol dr
 
 \section*{Artifact Availability}\label{artifact-pointers}
 
-The implementation, harnesses, 180-run counterbalanced primary matrix, historical 30-run supporting block, raw qualified results, generated interpretation tables, and fail-closed verification scripts are available at \href{https://github.com/thynics/stf_ics/tree/58cb4c57a3279d79f7b2205d5eb42a1016e53425}{immutable artifact commit \texttt{58cb4c57a}}. Its manifest records the full source-under-test SHA beginning \texttt{e3cfeaf3}; primary and historical timings remain separate from instrumented forensic and provenance-incomplete diagnostics.
+The implementation, harnesses, 180-run counterbalanced primary matrix, historical 30-run supporting block, raw qualified results, generated interpretation tables, and fail-closed verification scripts are preserved at result-bearing commit \texttt{58cb4c57a}. Its manifest records the full source-under-test SHA beginning \texttt{e3cfeaf3}; primary and historical timings remain separate from instrumented forensic and provenance-incomplete diagnostics. The working repository is presently access-controlled, so a reviewer-accessible archival URL must replace this sentence before submission.
 
 
 \bibliographystyle{ACM-Reference-Format}
