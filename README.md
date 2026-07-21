@@ -4,8 +4,8 @@ The Overleaf root document is `sigconf.tex`.
 
 Current title:
 
-> Guarding the HEFT Prefix: Copy-Aware Locality Refinement and a One-Hop
-> Chain Certificate for Multi-GPU Task Graphs
+> Guarding HEFT-Style Placement against MSI-Induced Locality Conflicts in
+> Multi-GPU Task Graphs
 
 The draft uses the repository's ACM `sigconf` template and includes:
 
