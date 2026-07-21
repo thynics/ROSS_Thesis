@@ -125,10 +125,10 @@ Q(d)=\max\{0,T(d)-A_k(v,d)\}.
 We first compute the HEFT baseline \(b\), breaking equal EFTs by lower device ID. Let
 
 \[
-R = \max\left\{\text{current system finish},\; \max_{d\in D} L_k(d)\right\}
+R = \max_{d\in D} L_k(d)
 \]
 
-be the current ready-time frontier, and define the baseline and candidate prefix finishes
+be the current ready-time frontier (the implementation's current-system-finish accumulator, defensively recomputed from all candidate device-ready times), and define the baseline and candidate prefix finishes
 
 \[
 P_b = \max\{R,F(b)\}, \qquad P(d)=\max\{R,F(d)\}.
@@ -150,7 +150,7 @@ P(1)-P_b
 
 It is therefore rejected for a tolerance smaller than both \(\epsilon\) and \(p_v\). The admissible subclass is nevertheless nonempty. Add an independently busy GPU 2 with ready time \(H\ge C+\epsilon+p_v\), while keeping its own candidate finish larger than those of GPUs 0 and 1. GPU 0 remains HEFT's device for \(v\), but the global ready frontier becomes \(R=H\), so \(P(0)=P(1)=H\). Staying with the valid owner on GPU 1 then passes the gate, has \(K(1)=0<K(0)=C\), and avoids the modeled return transfer without increasing the current prefix. Cholesky and LU provide the evaluated, non-synthetic observations of this hidden-slack opportunity.
 
-An alternative may therefore have a later per-task EFT than HEFT when that difference is hidden under the already established ready frontier, but it may increase the modeled finish of the current scheduling prefix by at most the numerical tolerance \(\varepsilon_p\). Adding the same constant to every ready and finish time changes neither this decision nor the queue-delay terms, avoiding a sensitivity of gates normalized by absolute EFT.
+An alternative may therefore have a later per-task EFT than HEFT when that difference is hidden under the already established ready frontier, but it may increase the modeled finish of the current scheduling prefix by at most the numerical tolerance \(\varepsilon_p\). Shifting every modeled timestamp---including availability, ready, and finish times---by the same constant changes neither this decision nor the queue-delay terms, avoiding a sensitivity of gates normalized by absolute EFT.
 
 \textbf{Modeled current-prefix contract.} If candidate \(d\) passes the gate above, replacing \(b\) by \(d\) increases the scheduler's current prefix-finish quantity by at most \(\varepsilon_p\). This follows directly from the acceptance predicate \(P(d)\le P_b+\varepsilon_p\); it is an enforceable contract, not a theorem about the suffix. Adding the same constant to every ready and finish time leaves both sides unchanged, so the predicate is time-shift invariant. The implementation fixes \(\varepsilon_p=10^{-6}\) ms. The contract concerns the model's scalar \(\max\{R,F\}\); it does not preserve the current task's EFT, the unscheduled suffix, or observed wall time. Here ``prefix'' means placement decisions already committed, not a predicted critical-path prefix.
 
@@ -173,7 +173,7 @@ c_B&=\operatorname{clip}\!\left(\frac{\ln(1+B_v)}{\ln(1+2^{30})}\right),
 \end{aligned}
 \]
 
-In the frozen configuration, \(\tau=0.25\) when \(c(v)>0.60\) and \(0.15\) otherwise, and \(\lambda_Q=0.35\). These inherited values are shared by every benchmark, were frozen before the repeated confirmation, and are not claimed optimal. Eligible alternatives are ranked by
+In the frozen configuration, \(K_{\min}=Q_{\min}=0.001\) ms, \(\tau=0.25\) when \(c(v)>0.60\) and \(0.15\) otherwise, and \(\lambda_Q=0.35\). These inherited values are shared by every benchmark, were frozen before the repeated confirmation, and are not claimed optimal. Eligible alternatives are ranked by
 
 \[
 S(d)=G_K(d)+\lambda_Q\max\{0,G_Q(d)\},
@@ -184,7 +184,7 @@ then by lower EFT and lower device ID under a score tie. The selected device is 
 \begin{Verbatim}[fontsize=\scriptsize]
 PREFIX-SAFE-COPY(task v, candidates D)
     b <- runtime HEFT-style candidate
-    R <- max(current system finish, max device ready time)
+    R <- max device ready time
     P_b <- max(R, F(b))
     eligible <- empty
     for d in D, d != b:
