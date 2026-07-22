@@ -267,7 +267,7 @@ The remaining 480 peer bytes under SALC are scalar traffic unrelated to the targ
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.97\textwidth]{figures/controlled_cg_chain_certificate.pdf}
+\includegraphics[width=0.94\textwidth]{figures/controlled_cg_chain_certificate.pdf}
 \Description{Controlled CG migrate--return trace. HEFT moves a 128 MiB mutable version from its owner on GPU 0 to task 46 on GPU 1, then six fixed-device reads return it. The fixed-successor SALC certificate keeps task 46 owner-local. Runtime attribution is conditional and trace-on latency is excluded.}
 \caption{Controlled CG migrate--return certificate. HEFT moves the 128 MiB version away from its owner; six fixed-device reads return it. SALC's one-hop certificate keeps task 46 owner-local. Runtime attribution is conditional and trace-on latency is excluded.}
 \end{figure*}
@@ -276,7 +276,7 @@ The observations are single, instrumented, and split across two pinned task wrap
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.97\textwidth]{figures/prefix_safe_selector.pdf}
+\includegraphics[width=0.92\textwidth]{figures/prefix_safe_selector.pdf}
 \Description{A ready CUDASTF task enters the existing candidate evaluator. A table records each GPU's predicted finish, modeled input-copy cost, and secondary score. The HEFT baseline row and a lower-copy candidate row feed prefix-safe admission; the committed task enters a GPU queue and updates ready-time and MSI residency state for the next decision.}
 \caption{CUDASTF selector state. HEFT supplies baseline \(b\); prefix-safe may admit lower-copy \(d^\star\). Committing the selected row updates ready-time and MSI state for the next task.}\label{fig:prefix-safe-selector}
 \end{figure*}
@@ -341,7 +341,7 @@ I exactly reproduces H task and dependency-check counts, placement digest, model
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.90\textwidth]{figures/primary_counterbalanced_results.pdf}
+\includegraphics[width=0.88\textwidth]{figures/primary_counterbalanced_results.pdf}
 \Description{All six paired prefix-safe over HEFT ratios for five workloads and their geometric means, alongside median scheduler-modeled copy totals. Cholesky and LU have different placements, lower modeled copy, and speedups above one. FDTD, CG, and MiniWeather are identical-placement timing controls.}
 \caption{Primary five-workload P/H evidence. (a) Six within-block ratios and geometric means; filled/open points denote different-/identical-placement cases. (b) Median modeled copy; values are not physical traffic.}\label{fig:primary-counterbalanced-results}
 \end{figure*}
@@ -365,7 +365,7 @@ After freezing the exact gate-only comparison, we varied only the scheduler's sc
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.93\textwidth]{figures/prefix_gate_ablation.pdf}
+\includegraphics[width=0.90\textwidth]{figures/prefix_gate_ablation.pdf}
 \Description{Prefix-safe versus exact gate removal at three scheduler copy-model bandwidths. Points are one-run diagnostics with no uncertainty estimate; dashed segments connect configurations that differ only in the prefix admission rule. LU exposes the protected-risk case, while Cholesky exposes the gate's conservative cost.}
 \caption{Prefix-safe versus exact gate removal at three scheduler copy-model bandwidths. Dashed segments connect configurations differing only in prefix admission. Each point is a one-run diagnostic.}\label{fig:prefix-gate-sensitivity}
 \end{figure*}
