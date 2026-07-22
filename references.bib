@@ -9,6 +9,26 @@
   doi     = {10.1109/71.993206}
 }
 
+@inproceedings{augonnet2024cudastf,
+  author    = {Augonnet, Cédric and Alexandrescu, Andrei and Sidelnik, Albert and Garland, Michael},
+  title     = {{CUDASTF}: Bridging the Gap Between {CUDA} and Task Parallelism},
+  booktitle = {Proceedings of the International Conference for High Performance Computing, Networking, Storage, and Analysis},
+  year      = {2024},
+  publisher = {IEEE Computer Society},
+  address   = {Los Alamitos, CA, USA},
+  pages     = {672--688},
+  doi       = {10.1109/SC41406.2024.00049}
+}
+
+@mastersthesis{chengli2026multiobjective,
+  author = {Cheng, Long and Li, Yicheng},
+  title  = {A Multi-Objective Scheduling Framework for Energy--Performance Optimization in Multi-{GPU} Task Graphs},
+  school = {Chalmers University of Technology},
+  year   = {2026},
+  type   = {Master's thesis},
+  url    = {https://hdl.handle.net/20.500.12380/311908}
+}
+
 @article{williams1949designs,
   author  = {Williams, E. J.},
   title   = {Experimental Designs Balanced for the Estimation of Residual Effects of Treatments},
@@ -20,12 +40,35 @@
   doi     = {10.1071/CH9490149}
 }
 
+@article{fleming1986geomean,
+  author  = {Fleming, Philip J. and Wallace, John J.},
+  title   = {How Not to Lie with Statistics: The Correct Way to Summarize Benchmark Results},
+  journal = {Communications of the ACM},
+  year    = {1986},
+  volume  = {29},
+  number  = {3},
+  pages   = {218--221},
+  doi     = {10.1145/5666.5673}
+}
+
+@article{rousseeuw1993alternatives,
+  author  = {Rousseeuw, Peter J. and Croux, Christophe},
+  title   = {Alternatives to the Median Absolute Deviation},
+  journal = {Journal of the American Statistical Association},
+  year    = {1993},
+  volume  = {88},
+  number  = {424},
+  pages   = {1273--1283},
+  doi     = {10.1080/01621459.1993.10476408}
+}
+
 @misc{openai2026codex,
   author       = {{OpenAI}},
-  title        = {Codex},
+  title        = {{OpenAI Codex}},
   year         = {2026},
-  howpublished = {\url{https://openai.com/codex/}},
-  note         = {Accessed 2026-07-21}
+  howpublished = {Software service},
+  url          = {https://openai.com/codex/},
+  lastaccessed = {July 21, 2026}
 }
 
 @article{arabnejad2014peft,
@@ -92,6 +135,16 @@
   number  = {6},
   pages   = {36--45},
   doi     = {10.1109/MCSE.2013.98}
+}
+
+@article{john2024multigpu,
+  author  = {John, Joseph and Milthorpe, Josh and Hérault, Thomas and Bosilca, George},
+  title   = {Multi-{GPU} Work Sharing in a Task-Based Dataflow Programming Model},
+  journal = {Future Generation Computer Systems},
+  year    = {2024},
+  volume  = {156},
+  pages   = {313--324},
+  doi     = {10.1016/j.future.2024.03.017}
 }
 
 @inproceedings{bauer2012legion,
@@ -182,26 +235,52 @@
   title        = {{CUDASTF}},
   year         = {2026},
   howpublished = {CUDA Core Compute Libraries documentation},
-  url          = {https://nvidia.github.io/cccl/unstable/cudax/stf.html},
-  note         = {Accessed 2026-07-12}
+  url          = {https://nvidia.github.io/cccl/cudax/stf.html},
+  lastaccessed = {July 22, 2026}
 }
 
-@article{bailey1991npb,
-  author  = {Bailey, David H. and Barszcz, Eric and Barton, John T. and Browning, David S. and Carter, Russell L. and Dagum, Leonardo and Fatoohi, Rod and Frederickson, Paul O. and Lasinski, Thomas A. and Schreiber, Robert S. and Simon, Horst D. and Venkatakrishnan, V. and Weeratunga, Sisira K.},
-  title   = {The {NAS} Parallel Benchmarks},
-  journal = {The International Journal of Supercomputer Applications},
-  year    = {1991},
-  volume  = {5},
-  number  = {3},
-  pages   = {63--73},
-  doi     = {10.1177/109434209100500306}
+@misc{nvidia2026cccl320,
+  author       = {{CCCL Development Team}},
+  title        = {{CCCL}: {CUDA} {C++} Core Libraries, Version 3.2.0},
+  year         = {2026},
+  howpublished = {Software release},
+  url          = {https://github.com/NVIDIA/cccl/tree/v3.2.0},
+  note         = {Release commit 477f8bc},
+  lastaccessed = {July 22, 2026}
 }
 
-@misc{norman2020miniweather,
+@misc{nvidia2024cublas,
+  author       = {{NVIDIA Corporation}},
+  title        = {{cuBLAS} Library},
+  year         = {2024},
+  howpublished = {CUDA Toolkit 12.4.1 documentation},
+  url          = {https://docs.nvidia.com/cuda/archive/12.4.1/cublas/index.html},
+  lastaccessed = {July 22, 2026}
+}
+
+@misc{nvidia2024cusolver,
+  author       = {{NVIDIA Corporation}},
+  title        = {{cuSOLVER} Library},
+  year         = {2024},
+  howpublished = {CUDA Toolkit 12.4.1 documentation},
+  url          = {https://docs.nvidia.com/cuda/archive/12.4.1/cusolver/index.html},
+  lastaccessed = {July 22, 2026}
+}
+
+@misc{nvidia2026cupti,
+  author       = {{NVIDIA Corporation}},
+  title        = {{CUPTI} Activity API: Memory Copy Activity Records},
+  year         = {2026},
+  howpublished = {CUDA Profiling Tools Interface documentation},
+  url          = {https://docs.nvidia.com/cupti/api/structCUpti__ActivityMemcpy6.html},
+  lastaccessed = {July 22, 2026}
+}
+
+@misc{norman2018miniweather,
   author       = {Norman, Matthew R.},
   title        = {The {MiniWeather} Mini App},
   year         = {2018},
   howpublished = {Software repository},
   url          = {https://github.com/mrnorman/miniWeather},
-  note         = {Accessed 2026-07-12}
+  lastaccessed = {July 22, 2026}
 }
