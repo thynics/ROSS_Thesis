@@ -7,9 +7,9 @@
 \label{tab:scheduler-cost}
 \begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-& \multicolumn{6}{c}{Scheduler share (\%)} & & \\
-\cmidrule(lr){2-7}
-Workload & H & I & W & O & P & N & P time (\(\mu\)s/task) & At target \\
+& \multicolumn{6}{c}{Scheduler share (\%)} & \multicolumn{1}{c}{P cost} & \multicolumn{1}{c}{Target} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-8}\cmidrule(lr){9-9}
+Workload & H & I & W & O & P & N & \(\mu\)s/task & Groups \\
 \midrule
 FDTD & 35.12 & 24.99 & 25.18 & 25.21 & 25.39 & 25.38 & 16.70 & 0/6 \\
 CG & \textbf{0.50} & \textbf{0.37} & \textbf{0.20} & \textbf{0.40} & \textbf{0.41} & \textbf{0.38} & 11.00 & 6/6 \\
@@ -18,5 +18,9 @@ LU & 10.96 & 8.18 & 9.69 & 9.57 & 10.13 & 8.63 & 7.55 & 0/6 \\
 MiniWeather & 6.64 & \textbf{4.94} & \textbf{4.83} & \textbf{4.96} & \textbf{4.98} & \textbf{4.95} & 13.85 & 5/6 \\
 \bottomrule
 \end{tabular}
-\vspace{2pt}\par\scriptsize Scheduler share is measured scheduling time divided by the benchmark interval, not critical-path overhead. ``At target'' counts treatment-group medians at or below 5\%.
+\vspace{2pt}\par
+\begin{minipage}{0.90\textwidth}
+\centering\scriptsize
+Scheduler share is measured scheduling time divided by the benchmark interval, not critical-path overhead. ``Target groups'' counts treatment-group medians at or below 5\%.
+\end{minipage}
 \end{table*}

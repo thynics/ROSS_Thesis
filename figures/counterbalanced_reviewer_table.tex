@@ -10,7 +10,7 @@
 \begin{tabular}{@{}lccccrrrrrr@{}}
 \toprule
 & \multicolumn{4}{c}{Speedup of P over} & \multicolumn{5}{c}{Modeled copy (GB) $\downarrow$} & Reduction \\
-\cmidrule(lr){2-5}\cmidrule(lr){6-10}\cmidrule(l){11-11}
+\cmidrule(lr){2-5}\cmidrule(lr){6-10}\cmidrule(lr){11-11}
 Workload & H & W & O & N & H & W & O & P & N & P/H \\
 \midrule
 FDTD & (1.022x) & (1.057x) & (0.942x) & (1.002x) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.0\% \\
@@ -33,5 +33,9 @@ LU & Primary & 6 & \textbf{1.177x} & 38.8\% & \textbf{1.210x} \\
 LU & Replication & 5 & \textbf{1.171x} & 39.4\% & \textbf{1.205x} \\
 \bottomrule
 \end{tabular}
-\vspace{2pt}\par\scriptsize Ratios above one favor P. Bold marks a material difference for mechanism-distinct comparisons. Parentheses mark identical placement-and-copy timing controls; CG's W comparison is mechanism-distinct. I is omitted here because its placement and copy exactly reproduce H; Section~\ref{fail-closed-identity-boundary} reports its timing controls. All paired directions agree for the effective cases. Copy traffic is scheduler-modeled.
+\vspace{2pt}\par
+\begin{minipage}{0.92\textwidth}
+\centering\scriptsize
+Ratios above one favor P. Bold marks a material difference for mechanism-distinct comparisons. Parentheses mark identical placement-and-copy timing controls; CG's W comparison is mechanism-distinct. I is omitted here because its placement and copy exactly reproduce H; Section~\ref{fail-closed-identity-boundary} reports its timing controls. All paired directions agree for the effective cases. Copy traffic is scheduler-modeled.
+\end{minipage}
 \end{table*}
