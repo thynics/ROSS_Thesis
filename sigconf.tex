@@ -267,9 +267,9 @@ The remaining 480 peer bytes under SALC are scalar traffic unrelated to the targ
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/controlled_cg_chain_certificate.pdf}
-\Description{Controlled CG-derived migrate--return pattern and the fixed-successor SALC certificate. The figure summarizes trace-on, controlled mechanism evidence; its latency is not performance eligible and its task/data attribution is conditional.}
-\caption{Controlled CG-derived migrate--return pattern and the fixed-successor SALC certificate. The figure summarizes trace-on, controlled mechanism evidence; its latency is not performance eligible and its task/data attribution is conditional.}
+\includegraphics[width=0.97\textwidth]{figures/controlled_cg_chain_certificate.pdf}
+\Description{Controlled CG migrate--return trace. HEFT moves a 128 MiB mutable version from its owner on GPU 0 to task 46 on GPU 1, then six fixed-device reads return it. The fixed-successor SALC certificate keeps task 46 owner-local. Runtime attribution is conditional and trace-on latency is excluded.}
+\caption{Controlled CG migrate--return certificate. HEFT moves the 128 MiB version away from its owner; six fixed-device reads return it. SALC's one-hop certificate keeps task 46 owner-local. Runtime attribution is conditional and trace-on latency is excluded.}
 \end{figure*}
 
 The observations are single, instrumented, and split across two pinned task wrappers. We therefore use no latency difference from this experiment; it establishes only an intervention-consistent decision-and-traffic certificate.
