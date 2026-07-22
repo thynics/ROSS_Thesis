@@ -1,18 +1,37 @@
-% Values transcribed from the qualified counterbalanced reviewer analysis.
+% Values derived from the qualified counterbalanced reviewer analysis and
+% the source-distinct five-block replication.
 \begin{table*}[t]
 \centering
 \footnotesize
-\setlength{\tabcolsep}{5pt}
-\caption{Primary different-placement cases (six paired blocks). Speedup above one favors P; bold values meet the 1.03x materiality threshold. Copy traffic is scheduler-modeled.}
+\setlength{\tabcolsep}{3.2pt}
+\caption{Primary five-workload matrix and source-distinct replication.}
 \label{tab:counterbalanced-baselines}
-\begin{tabular}{@{}lcccccccccc@{}}
+\textbf{(a) Primary Williams-balanced matrix (six paired blocks per workload)}\\[2pt]
+\begin{tabular}{@{}lccccrrrrrr@{}}
 \toprule
-& \multicolumn{4}{c}{Speedup of P over} & \multicolumn{5}{c}{Modeled copy (GB) $\downarrow$} \\
-\cmidrule(lr){2-5}\cmidrule(l){6-10}
-Workload & H & W & O & N & H & W & O & P & N \\
+& \multicolumn{4}{c}{Speedup of P over} & \multicolumn{5}{c}{Modeled copy (GB) $\downarrow$} & Reduction \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-10}\cmidrule(l){11-11}
+Workload & H & W & O & N & H & W & O & P & N & P/H \\
 \midrule
-Cholesky & \textbf{1.313x} & \textbf{1.239x} & \textbf{1.248x} & 0.861x & 128.55 & 116.20 & 113.46 & 24.41 & 5.90 \\
-LU & \textbf{1.177x} & 1.020x & \textbf{1.055x} & \textbf{1.210x} & 148.77 & 96.28 & 96.14 & 90.98 & 3.88 \\
+FDTD & (1.022x) & (1.057x) & (0.942x) & (1.002x) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.0\% \\
+CG & (0.997x) & \textbf{1.841x} & (1.002x) & (0.998x) & 42.95 & 42.95 & 42.95 & 42.95 & 42.95 & 0.0\% \\
+Cholesky & \textbf{1.313x} & \textbf{1.239x} & \textbf{1.248x} & \textbf{0.861x} & 128.55 & 116.20 & 113.46 & 24.41 & 5.90 & 81.0\% \\
+LU & \textbf{1.177x} & 1.020x & \textbf{1.055x} & \textbf{1.210x} & 148.77 & 96.28 & 96.14 & 90.98 & 3.88 & 38.8\% \\
+MiniWeather & (1.000x) & (0.997x) & (1.008x) & (1.004x) & 0.20 & 0.20 & 0.20 & 0.20 & 0.20 & 0.0\% \\
 \bottomrule
 \end{tabular}
+\\[5pt]
+\textbf{(b) Source-distinct replication of the effective cases}\\[2pt]
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+Workload & Block & Pairs & P/H & P copy reduction & P/N \\
+\midrule
+Cholesky & Primary & 6 & \textbf{1.313x} & 81.0\% & \textbf{0.861x} \\
+Cholesky & Replication & 5 & \textbf{1.315x} & 81.1\% & \textbf{0.860x} \\
+LU & Primary & 6 & \textbf{1.177x} & 38.8\% & \textbf{1.210x} \\
+LU & Replication & 5 & \textbf{1.171x} & 39.4\% & \textbf{1.205x} \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}\par\scriptsize Ratios above one favor P. Bold marks a material difference for mechanism-distinct comparisons. Parentheses mark identical placement-and-copy timing controls; CG's W comparison is mechanism-distinct. I is omitted here because its placement and copy exactly reproduce H; Section~\ref{fail-closed-identity-boundary} reports its timing controls. All paired directions agree for the effective cases. Copy traffic is scheduler-modeled.
 \end{table*}

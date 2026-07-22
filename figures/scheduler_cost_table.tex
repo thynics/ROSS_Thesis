@@ -1,0 +1,22 @@
+% Values derived from counterbalanced_baseline_overhead.tsv.
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\caption{Scheduler cost in the primary matrix (group medians). Bold shares meet the predeclared 5\% target.}
+\label{tab:scheduler-cost}
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+& \multicolumn{6}{c}{Scheduler share (\%)} & & \\
+\cmidrule(lr){2-7}
+Workload & H & I & W & O & P & N & P time (\(\mu\)s/task) & At target \\
+\midrule
+FDTD & 35.12 & 24.99 & 25.18 & 25.21 & 25.39 & 25.38 & 16.70 & 0/6 \\
+CG & \textbf{0.50} & \textbf{0.37} & \textbf{0.20} & \textbf{0.40} & \textbf{0.41} & \textbf{0.38} & 11.00 & 6/6 \\
+Cholesky & 13.49 & 9.94 & 10.11 & 10.58 & 13.10 & 15.43 & 7.60 & 0/6 \\
+LU & 10.96 & 8.18 & 9.69 & 9.57 & 10.13 & 8.63 & 7.55 & 0/6 \\
+MiniWeather & 6.64 & \textbf{4.94} & \textbf{4.83} & \textbf{4.96} & \textbf{4.98} & \textbf{4.95} & 13.85 & 5/6 \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}\par\scriptsize Scheduler share is measured scheduling time divided by the benchmark interval, not critical-path overhead. ``At target'' counts treatment-group medians at or below 5\%.
+\end{table*}
