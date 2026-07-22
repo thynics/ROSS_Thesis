@@ -15,7 +15,7 @@ The draft uses the repository's ACM `sigconf` template and includes:
 - the qualified 180-run, six-treatment, Williams-counterbalanced matrix;
 - the historical clean 30-run gate triplet as supporting strong-opportunity evidence;
 - one-run copy-model sensitivity with explicit evidence boundaries;
-- two vector figures and a fully specified bibliography.
+- four vector figures and a fully specified bibliography.
 
 The primary clean result is source-locked to
 `e3cfeaf36b6a8e3c4b3a1754270aa2ecde09647a` and contains all 180 expected
