@@ -91,8 +91,6 @@ In summary, this work makes the following contributions:
 
 \section{Background and Motivation}\label{sec:background}
 
-This section establishes the setting for prefix-safe placement: the multi-GPU task-graph runtime model, the HEFT baseline that our method refines, and the placement--residency conflict that motivates its design.
-
 \subsection{Runtime Model}\label{sec:runtime-model}
 
 We consider a task-graph runtime that schedules a directed acyclic graph (DAG) \(G=(V,E)\) onto a set of GPUs \(D\). Each vertex \(v\in V\) represents a task, and each edge denotes a data dependency. For every task--device pair \((v,d)\), the runtime maintains a predicted execution time \(p_v(d)>0\). Tasks access data through logical objects. Each object \(x\) has size \(\operatorname{bytes}(x)\), and the runtime estimates its transfer time as
@@ -135,7 +133,7 @@ This example shows that minimizing the current task's modeled finish time does n
 
 \section{Scheduler Design}\label{sec:scheduler-design}
 
-Given the next task \(v\) presented for placement and the runtime state defined in Section~\ref{sec:runtime-model}, the scheduler selects one device from \(D\). It first computes the HEFT-style earliest-finish device and then considers alternatives that require less modeled current-input movement. An alternative is eligible only if it satisfies the prefix-admission bound and copy-gain threshold below. Figure~\ref{fig:prefix-safe-selector} summarizes the decision.
+Given the next task \(v\), the scheduler first computes the HEFT-style device and then screens lower-copy alternatives through the prefix-admission and copy-gain gates in Figure~\ref{fig:prefix-safe-selector}.
 
 \subsection{Inputs and HEFT baseline}\label{sec:inputs-baseline}
 
@@ -213,8 +211,6 @@ This score prioritizes copy reduction and provides an additional preference for 
 Algorithm~\ref{alg:prefix-safe} consolidates the procedure. After computing baseline \(b\) and frontier \(R\), it screens each remaining device through the one-step prefix gate and then the copy gate. Surviving candidates are ranked by \(S(d)\); the scheduler commits the highest-ranked device or retains \(b\). The runtime then updates device-ready times and residency metadata before the next placement.
 
 \section{Experimental Methodology}\label{sec:methodology}
-
-This section describes the experimental protocol used to evaluate the proposed scheduler, including the execution platform, workload selection, comparison treatments, statistical methodology, and diagnostic procedures.
 
 \subsection{Platform}\label{sec:platform}
 
@@ -333,8 +329,6 @@ The inequality is a certificate only when the producer creates the unique releva
 
 \section{Evaluation}\label{sec:evaluation}
 
-This section evaluates prefix-safe placement on the counterbalanced five-workload matrix, covering opportunity cases, timing controls, robustness, a common-build direct-gate and runtime-issued-transfer diagnostic, copy-model sensitivity, scheduler overhead, and a controlled problem/boundary trace.
-
 \subsection{Primary Results}\label{sec:primary-results}
 
 This experiment asks whether prefix-safe placement (P) improves performance when a placement--residency opportunity is present. Among the five workloads, P departs from the HEFT baseline (H) only on Cholesky and LU (Table~\ref{tab:primary-matrix}, Figure~\ref{fig:primary-results}); the other three retain H's placement and act as timing controls.
@@ -357,7 +351,7 @@ The W/O comparisons show that objective design matters but do not isolate the pr
 
 \subsection{Separate-Source Robustness}\label{sec:reproducibility}
 
-This check asks whether the primary directions recur in a separately prepared, fixed-order historical block. It is not an independent-system replication and is not pooled with the Williams matrix.
+This separately prepared fixed-order block is not an independent-system replication and is not pooled with the Williams matrix.
 
 Across its five pairs, the robustness block gives P/H geometric means of 1.315\(\times\) on Cholesky and 1.171\(\times\) on LU, with modeled-copy reductions of 81.1\% and 39.4\%. The corresponding P/N ratios are 0.860\(\times\) and 1.205\(\times\). These estimates differ from the primary P/H means by 0.002\(\times\) and 0.006\(\times\), and from the primary copy reductions by 0.1 and 0.6 percentage points. All five pairs agree with the primary direction for each comparison. This supports direction stability across the two prepared blocks, but not broader statistical generalization.
 
@@ -373,7 +367,7 @@ The direct-gate signal is mixed (Table~\ref{tab:direct-gate-pilot}). P is 1.064\
 
 \subsection{Copy-model Sensitivity}\label{sec:copy-sensitivity}
 
-This sensitivity study examines whether the gate-removal outcomes depend on the scheduler's single copy-model parameter. Holding the frozen comparison fixed, we swept the modeled copy bandwidth across 10.35, 20.7, and 41.4 GB/s (Figure~\ref{fig:copy-sensitivity}).
+Holding the comparison fixed, we swept modeled copy bandwidth across 10.35, 20.7, and 41.4 GB/s (Figure~\ref{fig:copy-sensitivity}).
 
 The conservative-versus-protective split between the two workloads persists across all three settings. On Cholesky, both P and N stay faster than H (P 1.282--1.296\(\times\), N 1.509--1.540\(\times\)); on LU, P stays faster than H (1.153--1.173\(\times\)) while N stays below it (0.983--0.989\(\times\)). Each configuration is a single run, so the sweep establishes the persistence of this split across the modeled bandwidth range.
 
@@ -387,9 +381,7 @@ The conservative-versus-protective split between the two workloads persists acro
 
 \subsection{Scheduler Overhead}\label{sec:scheduler-overhead}
 
-This measurement quantifies the scheduler's decision cost as a share of end-to-end runtime. The overhead is workload-dependent, set by the length of the benchmark interval rather than by the prefix gate, so dense workloads with short intervals carry the highest share.
-
-The measured group medians are consistent with this observation. Of the thirty workload--scheduler group medians (Table~\ref{tab:scheduler-cost}), eleven meet the predeclared 5\% target and nineteen exceed it: all six CG groups and five of six MiniWeather groups meet it, whereas every FDTD, Cholesky, and LU group exceeds it. P adds 7.55--16.70 \(\mu\)s per task and its total scheduler time is lower than H on every workload, yet the share still exceeds target on the latency-improved dense workloads, and the historical block shows the same behavior.
+Of the 30 groups in Table~\ref{tab:scheduler-cost}, 11 meet the predeclared 5\% target: all six CG groups and five of six MiniWeather groups; every FDTD, Cholesky, and LU group exceeds it. P costs 7.55--16.70 \(\mu\)s per task and less total scheduler time than H on every workload, yet its share remains above target on the latency-improved dense workloads; the historical block behaves similarly.
 
 \input{figures/scheduler_cost_table.tex}
 
@@ -405,8 +397,6 @@ The evaluation-only SALC certificate instead keeps task 46 owner-local. Its one-
 
 \input{figures/controlled_trace_table.tex}
 
-The SALC intervention eliminates the predicted return traffic. Target peer traffic falls to zero, total peer traffic drops from 2.50 GiB to 480 B of unrelated scalar traffic, and all runtime-issued traffic falls from 4.25 GiB to 896 MiB (79.41\%), with correctness preserved (Table~\ref{tab:controlled-trace}, Figure~\ref{fig:controlled-trace}). Thus the trace validates the problem and the one-hop certificate while showing that P's no-lookahead contract intentionally declines this opportunity.
-
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.94\textwidth]{figures/controlled_cg_chain_certificate.pdf}
@@ -414,6 +404,8 @@ The SALC intervention eliminates the predicted return traffic. Target peer traff
 \caption{Controlled problem/boundary trace. H and P behave identically (P is omitted from the graphic); six fixed-device reads return the moved version. Evaluation-only SALC keeps task 46 owner-local.}
 \label{fig:controlled-trace}
 \end{figure*}
+
+The SALC intervention eliminates the predicted return traffic. Target peer traffic falls to zero, total peer traffic drops from 2.50 GiB to 480 B of unrelated scalar traffic, and all runtime-issued traffic falls from 4.25 GiB to 896 MiB (79.41\%), with correctness preserved (Table~\ref{tab:controlled-trace}, Figure~\ref{fig:controlled-trace}). Thus the trace validates the problem and the one-hop certificate while showing that P's no-lookahead contract intentionally declines this opportunity.
 
 \section{Related Work}\label{sec:related-work}
 
@@ -435,7 +427,7 @@ The SALC intervention eliminates the predicted return traffic. Target peer traff
 
 \section{Conclusion}\label{sec:conclusion}
 
-Task placement couples current finish time with later data residency. Prefix-safe copy-aware placement refines HEFT-style device selection by admitting lower-current-copy alternatives under an explicit one-step modeled prefix bound. The bound is deliberately local: it is not a successor or makespan guarantee. On two preselected placement-changing configurations, P reduces modeled copy and improves latency relative to both runtime-default H and framework-matched I; three mechanism-identical workloads expose timing variation, and exact gate removal shows a conditional trade-off---conservative on Cholesky and protective on LU. A common-build diagnostic matches modeled and runtime-issued peer-copy accounting exactly but finds a mixed comparison with the antecedent fixed gate, not dominance. A controlled trace separately demonstrates a migrate--return case that P rejects, marking the boundary of its no-lookahead contract. These results establish a precise, lightweight refinement and its observed opportunity cases, while broader workload/scale coverage, a repeated comparison with the complete thesis policy, measured physical traffic, prediction-error sensitivity, and lower overhead remain open.
+Task placement couples current finish time with later data residency. Prefix-safe placement refines HEFT-style device selection by admitting lower-current-copy alternatives under a one-step modeled prefix bound, not a successor or makespan guarantee. On two preselected placement-changing configurations, P reduces modeled copy and improves latency over H and I; three placement-identical workloads bound timing variation. Exact gate removal is conservative on Cholesky but protective on LU. A common-build diagnostic matches modeled and runtime-issued peer-copy accounting exactly, while its mixed comparison with the antecedent fixed gate rules out dominance. A controlled trace demonstrates a migrate--return case outside P's no-lookahead contract. Broader workload/scale coverage, repeated comparison with the complete antecedent policy, physical-traffic measurement, prediction-error sensitivity, and lower overhead remain open.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
