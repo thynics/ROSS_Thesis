@@ -1,0 +1,17 @@
+% Values derived from the current-source direct-gate traffic pilot.
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{3pt}
+\caption{Common-build transfer pilot (one fixed-order, instrumented observation per treatment). Ratios \(T_X/T_P>1\) favor P; peer data are CUDASTF-issued distinct-GPU copies, not physical-link traffic.}
+\label{tab:direct-gate-pilot}
+\begin{tabular*}{\columnwidth}{@{\hspace{5pt}}l@{\extracolsep{\fill}}rrrrr@{\hspace{5pt}}}
+\toprule
+& \multicolumn{2}{c}{Speedup of P over} & \multicolumn{3}{c}{Issued peer data (GB)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-6}
+Workload & H & \(C_0\) & H & \(C_0\) & P \\
+\midrule
+Cholesky & 1.315 & 1.064 & 128.85 & 18.73 & 24.41 \\
+LU & 1.166 & 0.866 & 148.96 & 95.71 & 92.75 \\
+\bottomrule
+\end{tabular*}
+\end{table}
