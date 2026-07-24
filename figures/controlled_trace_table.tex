@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{3pt}
+\caption{Controlled fixed-successor mechanism trace. Traffic values use binary units.}
+\label{tab:controlled-trace}
+\begin{tabularx}{\columnwidth}{@{\hspace{5pt}}>{\raggedright\arraybackslash}Xrr@{\hspace{5pt}}}
+\toprule
+Metric & H & SALC \\
+\midrule
+Direct interventions & 0 & 1 \\
+Owner round trips & 1 & 0 \\
+Target peer traffic & 896 MiB & 0 \\
+All peer traffic & 2.50 GiB & 480 B \\
+All issued traffic & 4.25 GiB & 896 MiB \\
+Correctness & PASS & PASS \\
+\bottomrule
+\end{tabularx}
+\end{table}

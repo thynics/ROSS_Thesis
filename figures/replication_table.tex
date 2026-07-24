@@ -1,0 +1,17 @@
+% Values derived from the source-distinct five-block replication.
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{2.8pt}
+\caption{Source-distinct replication of the effective cases; all paired directions agree with the primary matrix.}
+\label{tab:replication}
+\begin{tabular*}{\columnwidth}{@{\hspace{5pt}}l@{\extracolsep{\fill}}lrrrr@{\hspace{5pt}}}
+\toprule
+Workload & Block & Pairs & P/H & Copy red. & P/N \\
+\midrule
+Cholesky & Primary & 6 & \textbf{1.313x} & 81.0\% & \textbf{0.861x} \\
+Cholesky & Replication & 5 & \textbf{1.315x} & 81.1\% & \textbf{0.860x} \\
+LU & Primary & 6 & \textbf{1.177x} & 38.8\% & \textbf{1.210x} \\
+LU & Replication & 5 & \textbf{1.171x} & 39.4\% & \textbf{1.205x} \\
+\bottomrule
+\end{tabular*}
+\end{table}

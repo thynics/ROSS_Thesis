@@ -1,6 +1,6 @@
 \documentclass[sigconf]{acmart}
 \setcopyright{none}
-\settopmatter{printacmref=true}
+\settopmatter{printacmref=true,authorsperrow=2}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \acmConference[ROSS '26]{15th International Workshop on Runtime and Operating Systems for Supercomputers}{November 15, 2026}{Chicago, IL, USA}
 \acmBooktitle{15th International Workshop on Runtime and Operating Systems for Supercomputers (ROSS '26), November 15, 2026, Chicago, IL, USA}
@@ -11,161 +11,180 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{array}
-\usepackage{fancyvrb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{graphicx}
 \urlstyle{same}
 \providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setlength{\emergencystretch}{2em}
 
-\title{Guarding HEFT-Style Placement against MSI-Induced Locality Conflicts in Multi-GPU Task Graphs}
+\title{A Prefix-Safe Refinement of HEFT-Style Placement for Multi-GPU Task Graphs}
 
-% ROSS is single-blind. Final output must contain complete author metadata.
-\author{Author Information Required}
-\affiliation{\institution{Affiliation Required}\city{City Required}\country{Country Required}}
-\email{email-required@example.invalid}
+\author{Long Cheng}
+\affiliation{%
+  \institution{Chalmers University of Technology and University of Gothenburg}
+  \city{Gothenburg}
+  \country{Sweden}}
+\email{chenglo@student.chalmers.se}
+
+\author{Yicheng Li}
+\affiliation{%
+  \institution{Chalmers University of Technology and University of Gothenburg}
+  \city{Gothenburg}
+  \country{Sweden}}
+\email{yicheng@student.chalmers.se}
+\orcid{0000-0002-7583-6609}
+
+\author{Jing Chen}
+\affiliation{%
+  \institution{Chalmers University of Technology and University of Gothenburg}
+  \city{Gothenburg}
+  \country{Sweden}}
+\email{chjing@chalmers.se}
+\orcid{0000-0003-3409-8651}
+
+\author{Miquel Peric\`as}
+\affiliation{%
+  \institution{Chalmers University of Technology and University of Gothenburg}
+  \city{Gothenburg}
+  \country{Sweden}}
+\email{miquelp@chalmers.se}
+\orcid{0000-0002-7583-6609}
 
 \begin{document}
 \raggedbottom
 \begin{abstract}
-The HEFT-style device selector in CUDASTF accounts for communication that delays the current task, yet a favorable read--write placement can move the unique valid version of an object and induce larger successor traffic under the runtime's software MSI-style residency bookkeeping. We formalize this placement--residency conflict and its \emph{prefix-admissible} subclass, then introduce \textbf{prefix-safe copy-aware placement}: a lower-copy alternative is eligible only when it preserves the modeled finish of already committed placement decisions, up to a \(10^{-6}\) ms tolerance. The method predicts no unscheduled suffix, does not alter the runtime-supplied task order, and deliberately leaves non-admissible conflicts unchanged.
+In multi-GPU task-graph runtimes, task placement determines both execution time and data locality. HEFT-style earliest-finish-time placement already accounts for the communication required by the current task, but it does not explicitly consider how a placement changes data residency for later dependent tasks. As a result, a locally optimal placement may increase the communication required by subsequent tasks. We observe that such locality opportunities can often be exploited without delaying overall execution because the additional delay of an alternative placement may be hidden while other GPUs remain occupied by previously scheduled work. This observation exposes a bounded opportunity to improve locality without sacrificing the performance robustness of HEFT.
 
-A qualified 180-run matrix covers five workloads on one 8-GPU NVIDIA L4 node. Within each workload, a Williams design balances HEFT (H), a same-path identity control (I), two transparent locality baselines (W and O), prefix-safe placement (P), and exact gate removal (N) for block, position, and first-order carryover. On the two workloads where P changes placement, Cholesky and LU, it reduces modeled copy by 81.0\% and 38.8\% and improves latency over H by 1.313x and 1.177x. P materially outperforms both locality baselines on Cholesky and the owner baseline on LU; it is within the predeclared neutral range of the weighted baseline on LU. Gate removal exposes both sides of the safety--opportunity tradeoff: it helps Cholesky but harms LU. The other three workloads retain identical H/P/N placements and serve as timing controls. Nineteen of thirty workload--scheduler group medians miss our predeclared 5\% scheduler-share target, a prototype limitation. A separate controlled fixed-successor trace confirms the motivating migrate--return mechanism but is not used as performance evidence.
-
+We propose prefix-safe copy-aware placement, a lightweight refinement of HEFT-style scheduling that evaluates lower-copy alternatives relative to the HEFT decision. The scheduler accepts an alternative only if it reduces modeled data movement without extending the modeled completion of already committed execution; otherwise, it falls back to the original HEFT placement. We implement the proposed scheduler in CUDASTF and evaluate it on five multi-GPU benchmarks running on an eight-GPU NVIDIA L4 platform. Across the observed opportunity cases, the proposed method reduces scheduler-modeled copy by 39--81\% and improves latency by 1.18--1.31\(\times\) over HEFT, while remaining behaviorally identical to HEFT when no admissible locality improvement exists. Although implemented in CUDASTF, the admission rule is applicable to HEFT/EFT-style task-graph runtimes that maintain software-managed data residency.
 \end{abstract}
+
 \ccsdesc[500]{Computer systems organization~Heterogeneous (hybrid) systems}
 \ccsdesc[500]{Software and its engineering~Runtime environments}
 \ccsdesc[300]{Theory of computation~Scheduling algorithms}
-\keywords{multi-GPU task graphs, HEFT, data locality, runtime scheduling, copy traffic}
+\keywords{Multi-GPU, task graphs, HEFT, data locality, runtime scheduling, copy traffic, performance}
 \maketitle
 
-\section{Introduction}\label{introduction}
+\section{Introduction}\label{sec:introduction}
 
-Online heterogeneous schedulers must decide where to execute a task before the rest of a dynamic graph has necessarily become runnable. CUDASTF implements the Sequential Task Flow model over CUDA and automates dependencies and data movement for annotated logical data~\citep{augonnet2024cudastf,nvidia2026cudastf}. The fork studied here uses a \emph{HEFT-style current-task device selector}: for the runtime-supplied next task, it estimates each device's earliest finish time (EFT), including current-input availability, and chooses the minimum. Unlike canonical offline HEFT, which orders tasks by upward rank before EFT-based processor selection~\citep{topcuoglu2002heft}, the fork does not recompute task order. This distinction matters: our contribution refines device placement, not DAG ordering.
+In a multi-GPU runtime, the scheduler repeatedly assigns ready tasks to devices while the runtime manages the movement of their input and output data. These two responsibilities are tightly coupled: a placement decision determines not only when the current task can execute, but also where its data will be available for subsequent tasks. Effective placement must therefore account for both device availability and data locality. A widely used strategy is \emph{HEFT-style earliest-finish-time placement}. For each ready task, the scheduler estimates its finish time on every candidate device using device readiness, input-data availability, communication cost, and predicted execution time, and then selects the device with the earliest finish~\citep{topcuoglu2002heft}. This makes HEFT-style placement a strong baseline for online task-graph scheduling. In particular, it already accounts for the communication required to execute the current task.
 
-The local objective is nevertheless incomplete when placement changes data state. CUDASTF's logical-data layer uses an explicit \emph{software} MSI state: a write-like access leaves the new version on the selected GPU and invalidates stale instances elsewhere~\citep{nvidia2026cudastf}. This is not a claim about a hardware cache-coherence protocol. A placement that wins a fraction of a millisecond for the current task can consequently move a large mutable version away from the GPU where a later task consumes it. The later task either copies the version back or follows it and moves other inputs. In both cases the locally best EFT decision can initiate a residency cascade whose traffic is larger than the immediate gain. We use ``HEFT--MSI conflict'' as shorthand for this interaction between the runtime's HEFT-style selector and its software residency model.
+Communication, however, affects execution beyond the current placement decision. In runtimes with software-managed data residency, executing a task on a device may change where the updated versions of its logical data objects reside. A placement that minimizes the current task's earliest finish time can therefore leave the runtime in a data-residency state that increases the communication required by later dependent tasks. We refer to this general interaction as a \emph{placement--residency conflict}.
 
-This paper asks a general systems question: can an online scheduler exploit residency-aware copy savings without paying arbitrary delay in the work already committed? Our answer is a prefix-bounded refinement. We first retain HEFT's device as a baseline. We then consider devices that reduce modeled current-input copy and admit one only if its finish fits the baseline's current-prefix finish bound up to numerical tolerance. The rule is benchmark-independent: it applies to ordinary tasks and does not require a special mutable-chain label. Its opportunity is nevertheless a strict subclass of all HEFT--MSI conflicts: the current ready frontier must hide the alternative's HEFT-relative delay. The condition says nothing about the makespan of the unscheduled suffix.
+A simple migrate--return pattern illustrates the conflict. Consider a mutable object currently resident on one GPU. A read--write task may finish slightly earlier on another GPU after migrating that object. Once the task completes, the updated object resides on the selected GPU. If a later dependent task executes on the original GPU, the updated object must be transferred back. The first placement is locally optimal under the current earliest-finish estimate, yet it induces additional successor communication. Repeated instances of this pattern can amplify a small local placement advantage into a larger data-movement and readiness penalty along a dependency chain.
 
-As a diagnostic, we also ask whether the motivating migrate--return pattern can be identified directly in a controlled case. A narrow successor-aware locality certificate (SALC) compares a one-hop avoided output-copy lower bound against the producer's HEFT-relative EFT damage when the successor has an explicit fixed device. This trace validates the motivating mechanism; SALC is not presented as a second general scheduler or as natural-CG performance.
+The key observation of this work is that execution slack can create opportunities to improve data locality without sacrificing performance. A placement alternative may complete the current task slightly later than the HEFT choice while the remaining GPUs are still occupied by previously scheduled work. In this situation, the additional delay is effectively hidden and does not delay the overall execution. The scheduler can therefore exploit this hidden slack to reduce data movement while preserving application performance. This observation suggests that locality improvements should not be evaluated solely by the finish time of the current task. Instead, they should be accepted whenever the additional delay can be absorbed by work already executing elsewhere.
 
-This study revisits the placement layer of our prior thesis~\citep{chengli2026multiobjective}. That system used a conventional HEFT-relative residual gate and a contextual bandit; here we isolate a translation-invariant current-prefix contract, add exact gate removal and identity controls, and replace the earlier fixed-order evidence with a counterbalanced design.
+Based on this observation, we propose prefix-safe copy-aware placement, a lightweight refinement of HEFT-style scheduling. Rather than replacing HEFT, the scheduler first computes the standard HEFT placement as a conservative baseline and then evaluates alternative placements relative to that baseline. An alternative is considered only if it reduces the modeled data movement for the current task, and it is accepted only if replacing the HEFT decision does not extend the modeled completion time of work that has already been scheduled. Among all admissible alternatives, the scheduler selects the one with the largest modeled copy saving. Otherwise, it falls back to the original HEFT placement. We refer to this admission rule as prefix-safe because it guarantees that replacing the HEFT decision does not extend the modeled completion of the execution prefix that has already been committed.
 
-Our contributions are:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
+In summary, this work makes the following contributions:
+\begin{itemize}
 \tightlist
 \item
-  We formalize a legal migrate--return counterexample between CUDASTF's HEFT-style current-task selector and its software MSI-style residency transitions, and distinguish the prefix-admissible subclass that the main method can change.
+  We show that HEFT-style placement can create placement--residency conflicts: a placement that minimizes the current task's earliest finish time may increase the communication required by later dependent tasks.
 \item
-  We define and implement a translation-invariant, prefix-safe copy-aware refinement, together with an exact gate-removal ablation. The gate enforces an explicit current-prefix admission contract while optimizing a secondary copy-and-queue score; it is not claimed to repair every HEFT--MSI conflict.
+  We propose prefix-safe copy-aware placement, a lightweight refinement of HEFT that evaluates lower-copy alternatives relative to the HEFT decision and admits them only when they do not delay the completion of already committed execution. This enables the scheduler to exploit hidden execution slack to improve data locality while preserving the performance robustness of HEFT.
 \item
-  We evaluate opportunity, response, and gate risk separately. A qualified, six-treatment, 180-run Williams design identifies two effective different-placement cases, three identical-placement timing controls, performance against two locality baselines, and opposite gate-ablation outcomes; a controlled fixed-successor trace supplies diagnostic mechanism evidence.
-\end{enumerate}
+  We prototype the proposed scheduler in CUDASTF and evaluate it through a controlled methodology featuring counterbalanced execution order, identity controls, locality-aware baselines, and exact gate-removal ablations. The evaluation demonstrates a 39--81\% reduction in scheduler-modeled copy and a 1.18--1.31\(\times\) speedup over HEFT on the workloads where placement changes, while showing that the benefits of prefix-safe placement are opportunity- and condition-dependent. Although implemented in CUDASTF, the proposed admission rule is applicable to HEFT/EFT-style task-graph runtimes with software-managed data residency.
+\end{itemize}
 
-The resulting claim is deliberately smaller than ``automatic chain discovery'' but broader than a policy for two named benchmarks. Prefix safety is a general admission rule for the prefix-admissible subclass of placement--residency conflicts; the fixed-successor trace only certifies one graph-visible edge pattern. Neither result proves a suffix or global makespan improvement, and a benchmark-independent rule does not imply universal applicability or speedup.
+\section{Background and Motivation}\label{sec:background}
 
-\section{System Model and HEFT--MSI Conflict}\label{system-model-and-heftmsi-conflict}
+This section establishes the setting for prefix-safe placement: the multi-GPU task-graph runtime model, the HEFT baseline that our method refines, and the placement--residency conflict that motivates its design.
 
-\subsection{Online task and residency model}\label{online-task-and-residency-model}
+\subsection{Runtime Model}\label{sec:runtime-model}
 
-Let \(G=(V,E)\) be a task DAG and \(D=\{0,\ldots,m-1\}\) the GPU set. Task \(v\) has predicted compute time \(p_v>0\). A logical data object \(x\) has modeled copy time
-
+We consider a task-graph runtime that schedules a directed acyclic graph (DAG) \(G=(V,E)\) onto a set of GPUs \(D\). Each vertex \(v\in V\) represents a task, and each edge denotes a data dependency. For every task--device pair \((v,d)\), the runtime maintains a predicted execution time \(p_v(d)>0\). Tasks access data through logical objects. Each object \(x\) has size \(\operatorname{bytes}(x)\), and the runtime estimates its transfer time as
 \[
-c_x = \frac{\operatorname{bytes}(x)}{B},
+c_x=\frac{\operatorname{bytes}(x)}{B},
 \]
+where \(B\) is the effective bandwidth assumed by the runtime's transfer-cost model. The quantity \(c_x\) is therefore a scheduling estimate rather than a measurement of instantaneous interconnect bandwidth.
 
-where \(B\) is the scheduler's explicit copy-bandwidth parameter. At scheduling step \(k\), \(L_k(d)\) is GPU \(d\)'s modeled ready time and \(M_k(x,d)\in\{M,S,I\}\) is the scheduler's software Modified/Shared/Invalid residency state.
+Our prototype is implemented in CUDASTF, which tracks logical-data residency using software-managed Modified/\allowbreak Shared/\allowbreak Invalid (MSI) metadata. We adopt the same abstraction in the model: \(M(x,d)\in\{M,S,I\}\) records the state of object \(x\) on device \(d\), where \(M\) and \(S\) indicate that \(d\) holds a valid instance of the current version, whereas \(I\) indicates that the local instance is invalid. If a task requires \(x\) on a device where \(M(x,d)=I\), the runtime must obtain the current version from a device that holds a valid instance before the task can execute. After a write-like access to \(x\) on device \(d\), the newly produced version becomes Modified on \(d\), and conflicting instances on the remaining devices become Invalid.
 
-For current task \(v\), let \(A_k(v,d)\) be the latest availability time among its read and read--write inputs on \(d\). A local Modified or Shared instance incurs no transfer; otherwise availability includes a copy from a valid instance. The fork's current-task estimate follows HEFT's EFT structure~\citep{topcuoglu2002heft}:
+The scheduler also maintains a modeled ready time \(L(d)\) for each device, defined as the earliest time at which \(d\) can begin newly assigned work under the schedule constructed so far. Because tasks are placed one at a time, \(L(d)\) and \(M(x,d)\) always refer to this evolving state at the current decision. The placement decision is thus based on two forms of runtime state: \(L(d)\) captures device availability, while \(M(x,d)\) captures the availability of each task input.
 
+\subsection{HEFT Baseline}\label{sec:heft-baseline}
+
+Let \(A(v,d)\) denote the latest time at which all read and read--write inputs of task \(v\) are available on device \(d\). If a required input is not locally available, \(A(v,d)\) includes the time needed to transfer its current version to \(d\). The HEFT baseline places task \(v\) on the device with the earliest modeled finish time:
 \[
-F_k(v,d) = \max\{L_k(d), A_k(v,d)\} + p_v,
+F(v,d)=\max\{L(d),A(v,d)\}+p_v(d),
 \qquad
-b = \arg\min_{d\in D} F_k(v,d),
+b=\arg\min_{d\in D}F(v,d),
 \]
+where \(b\) is the device selected by the HEFT baseline; ties are broken by lower device ID.
 
-with a deterministic tie order. We call \(b\) the \textbf{HEFT baseline device}. After a write-like access on \(d\), the scheduler's MSI transition makes the new version valid at \(d\) and invalidates conflicting copies elsewhere.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/prefix_safe_selector.pdf}
+\Description{A ready task enters CUDASTF's candidate evaluator, which records each GPU's predicted finish, modeled copy, and score. The HEFT row and lower-copy candidates feed prefix-safe admission; the committed device updates GPU queues, ready times, and MSI residency state.}
+\caption{State and decision flow for prefix-safe copy-aware placement. The scheduler computes the HEFT baseline, evaluates lower-copy alternatives through the prefix and copy gates, and commits either the highest-ranked eligible candidate or the baseline.}
+\label{fig:prefix-safe-selector}
+\end{figure*}
 
-Here ``HEFT'' denotes this CUDASTF fork's HEFT-style current-task device selector; the runtime supplies task order rather than recomputing the offline upward-rank order of canonical HEFT. Equal-EFT candidates are resolved by lower device ID.
+\subsection{Motivation}\label{sec:motivation}
 
-This formulation also explains why the copy-gain-plus-penalty objective used in the prior placement layer~\citep{chengli2026multiobjective} can work even though HEFT already models communication. HEFT folds current input readiness into a \textbf{maximum} before adding compute time, whereas the secondary copy quantity \(K(d)\) below \textbf{sums} modeled transfers. A busy device or one late dependency can dominate \(F_k\) and hide several other transfers: two devices can have the same current-prefix finish while moving very different total bytes. Copy gain exposes that hidden locality slack; the prefix gate prevents the scheduler from buying lower traffic by extending the finish frontier that HEFT has already established. The method is therefore a secondary refinement of HEFT, not a claim that HEFT ignores communication.
+The HEFT baseline minimizes the modeled finish time of the current task, but it does not explicitly account for how the placement changes data residency for later tasks. After a write-like access, the updated version of a data object resides on the selected device, while conflicting copies on the remaining devices become invalid. Consequently, a placement that is locally optimal for the current task may increase the communication required by its successors. We refer to this interaction as a \emph{placement--residency conflict}.
 
-The transfer quantities reported in this paper require precise language. \textbf{Modeled copy bytes/time} are computed by the scheduler's MSI and bandwidth model. \textbf{Runtime-issued GPU-peer transfers} are data-interface copies that CUDASTF actually requests between distinct GPU endpoints. They are not profiler-observed device-copy activities, link utilization, or physical PCIe/NVLink bus traffic.
+This conflict can arise even in a simple two-GPU example. Suppose the current version of a large object \(x\) resides on GPU 1, and placing a read--write task \(v\) on GPU 0 shortens its modeled finish time by a small amount \(\epsilon\). The HEFT baseline therefore selects GPU 0. After \(v\) completes, the updated version of \(x\) now resides on GPU 0. If a dependent task later executes on GPU 1, the runtime must transfer the updated object back before that task can begin. This additional transfer would not have been required had \(v\) remained on GPU 1. In other words, a small improvement in the current task's finish time can introduce substantially more communication for later tasks.
 
-\subsection{Conflict definition}\label{conflict-definition}
+This example shows that minimizing the current task's modeled finish time does not necessarily minimize the communication experienced by the remaining execution. It motivates a placement refinement that considers locality-aware alternatives to the HEFT decision while preserving the execution progress established by the HEFT baseline.
 
-Let \(\Phi_k(v,d)\) denote the future data-movement penalty induced by placing \(v\) on \(d\). This is a conceptual suffix quantity, not something our main method computes. A HEFT--MSI locality conflict exists for devices \(g,h\) when
+\section{Scheduler Design}\label{sec:scheduler-design}
 
+Given a ready task \(v\) and the runtime state defined in Section~\ref{sec:runtime-model}, the scheduler selects one device from the candidate set \(D\). It first computes the placement chosen by the HEFT earliest-finish-time rule and then considers alternatives that require less modeled data movement. An alternative is eligible only if it satisfies the prefix-admission bound and the copy-gain threshold described below. The scheduler otherwise retains the HEFT placement. Figure~\ref{fig:prefix-safe-selector} shows this decision flow, which the rest of the section defines step by step.
+
+\subsection{Inputs and HEFT baseline}\label{sec:inputs-baseline}
+
+For each candidate device \(d\in D\), the scheduler evaluates four quantities. The HEFT model provides the predicted finish time \(F(v,d)\) and the device ready time \(L(d)\). The modeled communication cost \(K(d)\) is the total transfer time of the read and read--write inputs required by \(v\) on \(d\). The modeled queue delay is
 \[
-F_k(v,g) < F_k(v,h)
+Q(d)=\max\{0,L(d)-A(v,d)\},
 \]
+where \(A(v,d)\) is the time at which all required inputs are available on \(d\). Thus, \(K(d)\) captures the communication required by the placement, whereas \(Q(d)\) captures the delay caused by device availability after the inputs have become ready.
 
-but
-
+The HEFT baseline device is
 \[
-\Phi_k(v,g)-\Phi_k(v,h)
-  > F_k(v,h)-F_k(v,g).
+b=\arg\min_{d\in D}F(v,d).
 \]
-
-Thus the ordering of \(g\) and \(h\) is reversed under \(F_k+\Phi_k\). When \(D=\{g,h\}\), as in the construction below, their global minimizers differ; with more devices, the definition asserts only this pairwise reversal.
-
-A two-GPU construction establishes existence. Let a mutable object \(x\) be valid on GPU 1 and invalid on GPU 0, with copy time \(C\). Set GPU loads to \(L(0)=0\) and \(L(1)=C+\epsilon\), where \(0<\epsilon<C\). A read--write task \(v\) finishes at \(C+p_v\) on GPU 0 and at \(C+\epsilon+p_v\) on GPU 1, so HEFT moves \(x\) to GPU 0 for an \(\epsilon\) advantage. Now give successor \(u\) another large input that fixes its preferred execution at GPU 1. Under HEFT, \(u\) copies the new version of \(x\) back at cost \(C\); if \(v\) had stayed on GPU 1, that copy would be absent. Thus the construction proves one object-sized return transfer, whose modeled time is \(C\). If \(u\) lies on the serial dependency path, no intervening task overwrites \(x\), and the return copy is not completely hidden by other waiting, the suffix completion additionally loses \(C-\epsilon>0\).
-
-This is an existential statement. It does not imply that HEFT usually fails, that every read--write task belongs to a harmful chain, or that any local correction improves the full DAG. In fact, the two-GPU construction is intentionally stronger than the scope of the prefix-safe method: as shown below, its alternative extends the current prefix and is rejected.
-
-\section{Bounded Locality Refinements}\label{bounded-locality-refinements}
-
-\subsection{Prefix-safe copy-aware HEFT}\label{prefix-safe-copy-aware-heft}
-
-For the current task, let \(K(d)\) be the sum of modeled transfer times for its read and read--write inputs on device \(d\). Let \(T(d)=\max\{L_k(d),A_k(v,d)\}\) and define the modeled queue delay
-
+Let
 \[
-Q(d)=\max\{0,T(d)-A_k(v,d)\}.
+R=\max_{d\in D}L(d)
 \]
-
-We first compute the HEFT baseline \(b\), breaking equal EFTs by lower device ID. Let
-
+denote the current device-ready frontier. We define the modeled prefix completion under the HEFT baseline and under a candidate \(d\) as
 \[
-R = \max_{d\in D} L_k(d)
-\]
-
-be the current ready-time frontier (the implementation's current-system-finish accumulator, defensively recomputed from all candidate device-ready times), and define the baseline and candidate prefix finishes
-
-\[
-P_b = \max\{R,F(b)\}, \qquad P(d)=\max\{R,F(d)\}.
-\]
-
-The prefix gate admits \(d\ne b\) only if
-
-\[
-P(d) \le P_b + \varepsilon_p.
-\]
-
-We call a HEFT--MSI conflict \textbf{prefix-admissible} for candidate \(d\) when it has positive modeled current-input copy saving, satisfies the frozen copy-gain threshold, and passes this prefix gate. This definition exposes rather than hides the method boundary. In the two-GPU construction above, \(R=C+\epsilon\) (assuming no larger prior frontier), and the owner-preserving alternative has
-
-\[
-P(1)-P_b
-= C+\epsilon+p_v-\max\{C+\epsilon,C+p_v\}
-= \min\{\epsilon,p_v\}>0.
-\]
-
-It is therefore rejected for a tolerance smaller than both \(\epsilon\) and \(p_v\). The admissible subclass is nevertheless nonempty. Add an independently busy GPU 2 with ready time \(H\ge C+\epsilon+p_v\), while keeping its own candidate finish larger than those of GPUs 0 and 1. GPU 0 remains HEFT's device for \(v\), but the global ready frontier becomes \(R=H\), so \(P(0)=P(1)=H\). Staying with the valid owner on GPU 1 then passes the gate, has \(K(1)=0<K(0)=C\), and avoids the modeled return transfer without increasing the current prefix. Cholesky and LU provide the evaluated, non-synthetic observations of this hidden-slack opportunity.
-
-An alternative may therefore have a later per-task EFT than HEFT when that difference is hidden under the already established ready frontier, but it may increase the modeled finish of the current scheduling prefix by at most the numerical tolerance \(\varepsilon_p\). Shifting every modeled timestamp---including availability, ready, and finish times---by the same constant changes neither this decision nor the queue-delay terms, avoiding a sensitivity of gates normalized by absolute EFT.
-
-\textbf{Modeled current-prefix contract.} If candidate \(d\) passes the gate above, replacing \(b\) by \(d\) increases the scheduler's current prefix-finish quantity by at most \(\varepsilon_p\). This follows directly from the acceptance predicate \(P(d)\le P_b+\varepsilon_p\); it is an enforceable contract, not a theorem about the suffix. Adding the same constant to every ready and finish time leaves both sides unchanged, so the predicate is time-shift invariant. The implementation fixes \(\varepsilon_p=10^{-6}\) ms. The contract concerns the model's scalar \(\max\{R,F\}\); it does not preserve the current task's EFT, the unscheduled suffix, or observed wall time. Here ``prefix'' means placement decisions already committed, not a predicted critical-path prefix.
-
-Among prefix-safe alternatives, we retain the prior placement layer's copy-aware selectivity~\citep{chengli2026multiobjective}. Define
-
-\[
-G_K(d)=\frac{K(b)-K(d)}{\max\{K_{\min},K(b)\}},
+P_b=\max\{R,F(v,b)\},
 \qquad
+P(d)=\max\{R,F(v,d)\}.
+\]
+
+\subsection{Prefix Admission}\label{sec:prefix-admission}
+
+A non-baseline device \(d\ne b\) is \emph{prefix-admissible} when
+\[
+P(d)\le P_b+\varepsilon_p,
+\]
+where \(\varepsilon_p\) is a numerical tolerance. This condition permits an alternative whose task-level finish time is later than that of the HEFT baseline when the difference remains within the device-ready frontier. Consequently, replacing \(b\) with an admitted candidate increases the scheduler's modeled prefix-completion quantity by at most \(\varepsilon_p\).
+
+\subsection{Copy Gate and Ranking}\label{sec:copy-gate}
+
+Prefix admission bounds the modeled timing effect of an alternative; the copy gate determines whether the alternative provides sufficient communication benefit. Relative to the HEFT baseline, the scheduler computes the normalized copy gain
+\[
+G_K(d)=\frac{K(b)-K(d)}{\max\{K_{\min},K(b)\}}
+\]
+and the normalized queue-delay gain
+\[
 G_Q(d)=\frac{Q(b)-Q(d)}{\max\{Q_{\min},Q(b)\}}.
 \]
 
-The candidate must have a strictly positive copy saving and satisfy \(G_K(d)\ge\tau\). Let \(n_v\) be dependency count, \(B_v\) the bytes of read/read--write inputs, \(p_v\) the predicted task time in ms, and \(\operatorname{clip}(z)=\min\{1,\max\{0,z\}\}\). Define
-
+A candidate passes the copy gate when it yields a positive copy saving and satisfies
+\[
+G_K(d)\ge \tau(v).
+\]
+The threshold \(\tau(v)\) is conditioned on a task-difficulty score derived from the predicted execution time \(p_v\), dependency count \(n_v\), and total bytes \(B_v\) of the task's read and read--write inputs. With
+\[
+\operatorname{clip}(z)=\min\{1,\max\{0,z\}\},
+\]
+the normalized components and aggregate score are
 \[
 \begin{aligned}
 c_p&=\operatorname{clip}\!\left(\frac{\ln(1+p_v)}{\ln 501}\right),
@@ -174,131 +193,69 @@ c_B&=\operatorname{clip}\!\left(\frac{\ln(1+B_v)}{\ln(1+2^{30})}\right),
 &c(v)&=\operatorname{clip}(0.55c_p+0.30c_n+0.15c_B).
 \end{aligned}
 \]
+The scheduler uses \(\tau(v)=0.25\) when \(c(v)>0.60\) and \(\tau(v)=0.15\) otherwise.
 
-The frozen configuration inherits \(K_{\min}=Q_{\min}=0.001\) ms, \(\tau=0.25\) when \(c(v)>0.60\) and \(0.15\) otherwise, and \(\lambda_Q=0.35\) from that prior layer~\citep{chengli2026multiobjective}. These values are shared by every benchmark, were frozen before the repeated confirmation, and are not claimed optimal. Eligible alternatives are ranked by
-
+Candidates that pass both gates are ranked by
 \[
-S(d)=G_K(d)+\lambda_Q\max\{0,G_Q(d)\},
+S(d)=G_K(d)+\lambda_Q\max\{0,G_Q(d)\}.
 \]
+This score prioritizes copy reduction and provides an additional preference for candidates that also reduce queue delay. The scheduler selects the candidate with the largest \(S(d)\); score ties are resolved by lower predicted finish time. If no candidate passes both gates, the scheduler returns the HEFT baseline \(b\). The implementation uses \(\varepsilon_p=10^{-6}\) ms, \(K_{\min}=Q_{\min}=0.001\) ms, and \(\lambda_Q=0.35\).
 
-then by lower EFT and lower device ID under a score tie. The selected device is HEFT when no candidate passes both gates.
+Algorithm~\ref{alg:prefix-safe} consolidates the complete placement procedure. After computing the HEFT baseline \(b\) and the ready-time frontier \(R\), it screens each remaining device through the prefix gate and, only if that passes, the copy gate. Ordering the two gates this way checks timing safety before any copy trade-off, so an alternative is scored only when it is already known not to extend the committed prefix. Surviving candidates are ranked by \(S(d)\); the scheduler commits the highest-ranked device, or retains \(b\) when none qualifies. Once the selected device is committed, the runtime updates its device-ready times and residency metadata before scheduling the next task.
 
-\begin{Verbatim}[fontsize=\scriptsize]
-PREFIX-SAFE-COPY(task v, candidates D)
-    b <- runtime HEFT-style candidate
-    R <- max device ready time
-    P_b <- max(R, F(b))
-    eligible <- empty
-    for d in D, d != b:
-        if candidate fields are not finite: continue
-        copy_saving <- K(b) - K(d)
-        copy_gain <- copy_saving / max(K_min, K(b))
-        if copy_saving <= eps or copy_gain < tau(v): continue
-        if F(d) > P_b + eps_prefix: continue
-        queue_gain <- (Q(b) - Q(d)) / max(Q_min, Q(b))
-        score <- copy_gain + lambda_Q * max(0, queue_gain)
-        add (d, score) to eligible
-    if eligible is empty: return b
-    return highest score, then lower EFT, then lower device ID
-\end{Verbatim}
+\section{Experimental Methodology}\label{sec:methodology}
 
-The method records accepted copy saving, HEFT-relative EFT damage, and prefix damage. Verification requires aggregate prefix damage to be zero within numerical tolerance. The broad mode is our main method. A one-read--write/unique-owner restriction was also implemented, but every task in the studied Cholesky and LU DAGs satisfied that scope, and the restricted and broad variants produced identical placements. The scope is therefore not evidence of chain detection.
+This section describes the experimental protocol used to evaluate the proposed scheduler, including the execution platform, workload selection, comparison treatments, statistical methodology, and diagnostic procedures.
 
-Figure~\ref{fig:prefix-safe-selector} summarizes the concrete state consumed by this rule: the existing evaluator supplies HEFT's baseline row, residency state supplies modeled copy, prefix admission selects at most one alternative, and committing that row updates the ready-time and MSI state used by the next decision.
+\subsection{Platform}\label{sec:platform}
 
-For controlled mechanism isolation, the source-matched \texttt{no-prefix} ablation retains the same HEFT-style baseline, candidate set, copy and queue gains, thresholds, score, and tie breaks, but disables only the prefix admission rule. It consequently has no prefix contract. This exact removal distinguishes the gate's effect from the prior conventional relative-EFT comparator~\citep{chengli2026multiobjective}, which changes the timing rule itself.
+Experiments were conducted on a single dual-NUMA node with eight NVIDIA L4 GPUs (23,034 MiB each), using driver 595.71.05, CUDA 12.4.131, GCC 13.3.0, and CUDASTF/CCCL 3.2.0.0~\citep{nvidia2026cccl320} in a C++17 Release build. GPUs 0--3 and 4--7 form two NUMA-local PCIe groups, and cross-group transfers traverse the system interconnect. Transfer time is modeled using a single copy-bandwidth parameter \(B=20.7\) GB/s, the median of a directed-pair bandwidth microbenchmark. Task compute costs are calibrated once on GPU 0 and shared across the eight identical L4s.
 
-\subsection{Diagnostic fixed-successor certificate}\label{fixed-successor-salc-companion}
+\begin{algorithm}[t]
+\caption{Prefix-safe copy-aware placement.}
+\label{alg:prefix-safe}
+\begin{algorithmic}[1]
+\Procedure{PrefixSafeCopy}{$\text{task }v,\text{ candidates }D$}
+\State $b\gets\arg\min_{d\in D}F(v,d)$
+\State $R\gets\max_{d\in D}L(d)$
+\State $P_b\gets\max\{R,F(v,b)\}$
+\State $\mathit{eligible}\gets\emptyset$
+\ForAll{$d\in D$ with $d\ne b$}
+  \State $P(d)\gets\max\{R,F(v,d)\}$
+  \If{$P(d)>P_b+\varepsilon_p$}
+    \State \textbf{continue} \Comment{prefix gate}
+  \EndIf
+  \State $\Delta K\gets K(b)-K(d)$
+  \State $g_K\gets\Delta K/\max\{K_{\min},K(b)\}$
+  \If{$\Delta K\le 0$ or $g_K<\tau(v)$}
+    \State \textbf{continue} \Comment{copy gate}
+  \EndIf
+  \State $g_Q\gets(Q(b)-Q(d))/\max\{Q_{\min},Q(b)\}$
+  \State $S(d)\gets g_K+\lambda_Q\max\{0,g_Q\}$
+  \State $\mathit{eligible}\gets\mathit{eligible}\cup\{(d,S(d))\}$
+\EndFor
+\If{$\mathit{eligible}=\emptyset$}
+  \State \Return $b$
+\EndIf
+\State \Return the $d$ with largest $S(d)$; break score ties by lower $F(v,d)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-Prefix safety cannot accept a device whose current EFT extends \(P_b\), even when one known future copy is much larger. SALC addresses only a graph-visible version of that case.
+\subsection{Workloads}\label{sec:workloads}
 
-For producer \(v\), SALC identifies write-like output symbols read by direct successors. If successor \(u\) is explicitly fixed to GPU \(a(u)\), that GPU is an authoritative anchor. For a hypothetical producer device \(d\), a conservative one-hop modeled copy quantity is
+FDTD, CG, and Cholesky are task-graph adaptations of the CUDASTF sources in CCCL v3.2.0~\citep{nvidia2026cccl320}; LU is a no-pivot tiled companion we implemented. Cholesky and LU call FP64 cuBLAS and cuSOLVER kernels~\citep{nvidia2024cublas,nvidia2024cusolver}, and MiniWeather is a six-region task-graph adaptation of the miniWeather mini-app~\citep{norman2018miniweather}. For Cholesky and LU, correctness applies three fixed \(\{-1,+1\}\) probes to the reconstructed factorization, normalizes the worst projected residual by \(\lVert A\rVert_\infty\), and checks the full output checksum; the remaining workloads use the checksums listed in Table~\ref{tab:workloads}.
 
-\[
-\Phi_1(d)=
-\sum_{(x,a)\in U}
-\mathbf{1}[d\ne a]\frac{\operatorname{bytes}(x)}{B},
-\]
-
-where \(U\) deduplicates output-symbol/anchor pairs. For HEFT baseline \(b\) and alternative \(d\), SALC computes
-
-\[
-G_{\mathrm{future}}(d)=\Phi_1(b)-\Phi_1(d),
-\qquad
-\Delta_F(d)=\max\{0,F(d)-F(b)\},
-\]
-
-and accepts only when
-
-\[
-C_{\mathrm{SALC}}(d)
-=G_{\mathrm{future}}(d)-\Delta_F(d)
-> \mu,
-\]
-
-for margin \(\mu\) (zero in the controlled certificate). SALC selects the positive candidate with the largest certificate, breaking ties by EFT.
-
-The inequality is a certificate only when the producer creates the unique relevant version, the fixed successor reads that same version, and no intervening task overwrites it. It certifies a modeled one-hop edge risk, not actual saved link time, critical-path delay, suffix speedup, or global makespan. Although the implementation can form a shadow anchor for non-fixed successors, the positive evidence here is specifically the authoritative fixed-successor case.
-
-\section{Controlled Mechanism Diagnostic}\label{controlled-cg-derived-chain-certificate}
-
-We constructed a controlled residual-audit path inside CG to realize the formal conflict without presenting it as natural CG performance. The setup initializes a 128 MiB target version on GPU 0. Under wrappers pinned to canonically identical calibration content and strict task keys, HEFT places read--write task 46 (\texttt{cg\_axpy}) on GPU 1; an independent runtime-load attestation was unavailable. A direct \texttt{cg\_dot} successor is fixed to GPU 0, so task 48 returns the produced data; five later fixed reads repeat that direction.
-
-The corrected fixed-anchor SALC implementation makes exactly one direct intervention: task 46 stays on GPU 0. Its one-copy future lower bound is 6.483948 ms, its HEFT-relative EFT damage is 0.474260 ms, and the certificate is therefore 6.009688 ms. Replaying the independently recorded HEFT decisions shows 28 final placement differences: the direct task plus 27 downstream cascade changes.
-
-\begin{table}[t]
-\centering
-\caption{Controlled fixed-successor mechanism trace. Traffic values use binary units.}\label{tab:controlled-cg-certificate}
-\footnotesize
-\setlength{\tabcolsep}{2.5pt}
-\begin{tabularx}{\columnwidth}{@{\hspace{5pt}}>{\raggedright\arraybackslash}Xrr@{\hspace{5pt}}}
-\toprule
-Metric & H & SALC \\
-\midrule
-Direct interventions & 0 & 1 \\
-Owner round trips & 1 & 0 \\
-Target peer traffic & 896 MiB & 0 \\
-All peer traffic & 2.50 GiB & 480 B \\
-All issued traffic & 4.25 GiB & 896 MiB \\
-Correctness & PASS & PASS \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-The remaining 480 peer bytes under SALC are scalar traffic unrelated to the target. Target peer bytes fall by 100\%, total peer bytes by 99.99998\%, and all runtime-issued bytes by 79.41\%. The artifact verifier joins task/data identity with the fixed-successor interval and recomputes SALC's placement digest; runtime rows do not contain an independent data-version epoch, so attribution is explicitly conditional rather than overstated.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.94\textwidth]{figures/controlled_cg_chain_certificate.pdf}
-\Description{Controlled CG migrate--return trace. HEFT moves a 128 MiB mutable version from its owner on GPU 0 to task 46 on GPU 1, then six fixed-device reads return it. The fixed-successor SALC certificate keeps task 46 owner-local. Runtime attribution is conditional and trace-on latency is excluded.}
-\caption{Controlled CG migrate--return certificate. HEFT moves the 128 MiB version away from its owner; six fixed-device reads return it. SALC's one-hop certificate keeps task 46 owner-local. Runtime attribution is conditional and trace-on latency is excluded.}
-\end{figure*}
-
-The observations are single, instrumented, and split across two pinned task wrappers. We therefore use no latency difference from this experiment; it establishes only an intervention-consistent decision-and-traffic certificate.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.92\textwidth]{figures/prefix_safe_selector.pdf}
-\Description{A ready CUDASTF task enters the existing candidate evaluator. A table records each GPU's predicted finish, modeled input-copy cost, and secondary score. The HEFT baseline row and a lower-copy candidate row feed prefix-safe admission; the committed task enters a GPU queue and updates ready-time and MSI residency state for the next decision.}
-\caption{CUDASTF selector state. HEFT supplies baseline \(b\); prefix-safe may admit lower-copy \(d^\star\). Committing the selected row updates ready-time and MSI state for the next task.}\label{fig:prefix-safe-selector}
-\end{figure*}
-
-\section{Experimental Methodology and Evidence Discipline}\label{experimental-methodology-and-evidence-discipline}
-
-\subsection{Platform, workloads, and schedulers}\label{platform-workloads-and-schedulers}
-
-The primary matrix ran on one dual-NUMA Europa node with eight NVIDIA L4 GPUs (23,034 MiB each), driver 595.71.05, CUDA 12.4.131, GCC 13.3.0, CMake 4.3.4, CUDASTF/CCCL 3.2.0.0~\citep{nvidia2026cccl320}, and a C++17 Release build. The supporting replication used an earlier, source-distinct snapshot on the same platform; the artifact manifest binds every result to its exact source revision. GPUs 0--3 and 4--7 form separate NUMA-local PCIe groups; cross-group traffic traverses the system interconnect. A nearby metadata snapshot identifies a dual-socket Intel Xeon Gold 6548N host, but its clock and persistence readings are not treated as steady-state attestations.
-
-The scheduler uses one scalar 20.7 GB/s copy parameter, derived from a complete directed-pair microbenchmark with 20.726 GB/s median. It does not model the NODE/SYS pair distinction, contention, or copy/compute overlap. Robust task-cost calibration runs on GPU 0 and is then shared across the eight identical L4s.
+The workloads are divided into two categories according to whether they expose placement opportunities. Cholesky and LU expose substantial modeled-copy opportunity and yield different H/P/N placement digests, and the matrix uses them to measure the placement change; their sizes were fixed after a single exploratory run to exhibit the placement--residency mechanism. FDTD, CG, and MiniWeather yield identical H/P/N placement digests and modeled-copy totals, and therefore serve as timing controls that isolate scheduler-path and system variation.
 
 \begin{table*}[t]
 \centering
-\caption{Workload configurations and correctness contracts. All workloads use FP64.}\label{tab:workloads}
-\footnotesize
+\caption{Workload configurations and correctness contracts. All workloads use FP64.}
+\label{tab:workloads}
 \setlength{\tabcolsep}{4pt}
 \begin{tabularx}{\textwidth}{@{\hspace{5pt}}l>{\raggedright\arraybackslash}p{0.29\textwidth}r>{\raggedright\arraybackslash}X@{\hspace{5pt}}}
 \toprule
-Workload & Configuration & Tasks & Correctness contract \\
+Workload & Configuration & Number of Tasks & Correctness contract \\
 \midrule
 FDTD & 672 steps; \(64^3\) grid & 4,704 & Final-state \(E_z\) checksum and norms \\
 Cholesky & \(n=28{,}672\), tile \(=256\) (\(112^2\) tiles) & 240,464 & Three-probe \(LL^\top\) residual and checksum \\
@@ -309,120 +266,156 @@ CG & \(n=2^{24}\), 40 repeats, at most 10 iterations & 3,040 & Final checksum \\
 \end{tabularx}
 \end{table*}
 
-FDTD, CG, and Cholesky are task-graph adaptations of the CUDASTF sources distributed with CCCL v3.2.0~\citep{nvidia2026cccl320}; LU is our project-specific no-pivot tiled companion. Cholesky and LU invoke FP64 cuBLAS and cuSOLVER kernels~\citep{nvidia2024cublas,nvidia2024cusolver}, while MiniWeather is a six-region task-graph adaptation of the public miniWeather mini-app~\citep{norman2018miniweather}. For Cholesky and LU, the correctness check applies three fixed \(\{-1,+1\}\) probes to the reconstructed factorization, normalizes the worst projected residual by \(\lVert A\rVert_\infty\), and also requires the full output checksum; it is not an exhaustive matrix-norm residual.
+\subsection{Schedulers and Protocol}\label{sec:schedulers-protocol}
 
-Workload names do not define the method's scope. Table~\ref{tab:workloads} samples distinct problem conditions in the primary repeated matrix. Cholesky and LU expose substantial modeled-copy opportunity and different H/P/N placement digests. FDTD, CG, and MiniWeather produce identical H/P/N placement digests and modeled-copy totals, so they measure scheduler-path and system timing variation rather than the effect of a locality decision. Standard CG also supplies prior identity-control and certificate evidence. The Cholesky and LU configurations were frozen after one-run exploration and are therefore mechanism-bearing cases, not an unbiased prevalence survey. We use them to test the response to prefix-admissible HEFT--MSI opportunities, not to claim that dense factorization is the method's target domain.
+The primary experiment compares six scheduler variants. H is the runtime-default HEFT scheduler. I executes the same weighted-selection code path with zero weight, reproducing H's placement and modeled copy exactly. W minimizes the current earliest-finish-time objective augmented with modeled input-copy cost across all candidate devices, whereas O restricts this weighted objective to the HEFT baseline and the unique Modified owner. P denotes the proposed prefix-safe scheduler, and N is its no-prefix ablation with prefix admission disabled. W and O serve as internal locality-aware baselines.
 
-All repeated workloads set \path{CUDASTF_THESIS_DEFER_KERNEL_TASKS=1}: each DAG is fully materialized before \texttt{ctx.submit()}. Placement decisions remain sequential and irrevocable, and prefix-safe itself uses no successor prediction, but these experiments do not validate dynamic task arrival. Cholesky and LU record a CUDA start event immediately before DAG construction and a completion event after deferred submission finishes; the reported benchmark interval therefore spans graph construction, scheduling-induced gaps, and GPU execution, but excludes the subsequent correctness check.
+All experiments enable \path{CUDASTF_THESIS_DEFER_KERNEL_TASKS=1}, fully materializing each DAG before \texttt{ctx.submit()}; placement decisions remain sequential and irrevocable. For Cholesky and LU, the benchmark interval runs from a CUDA start event before DAG construction to a completion event after deferred submission, and thus covers graph construction, scheduling gaps, and GPU execution while excluding the correctness check.
 
-The primary protocol compares six treatments. H is the runtime-default HEFT-style selector. I runs the global weighted-selector code path with weight zero and must exactly reproduce H placement and modeled copy. W minimizes current EFT plus the sum of modeled current-input copy time (unit weight) over all devices. O applies the same weighted objective only to H and the unique Modified owner, when one exists. P is prefix-safe, and N differs from P only by disabling prefix admission. W and O are transparent internal locality baselines rather than claims to reproduce a particular external runtime.
+Each workload runs six repeat blocks in which all six treatments execute once. A six-sequence Williams design~\citep{williams1949designs} places every treatment in each order position once and every directed first-order adjacency once, balancing the \(5\times6\times6=180\) observations within workload for block, position, and first-order carryover effects. Each block shares one fresh GPU-0 calibration. From nine timed reservations, the estimator discards the first and takes the median of the remainder, requiring at least 7/9 samples within \(\max(25\%\text{ of median},f)\) and a robust scale \(1.4826\,\mathrm{MAD}\)~\citep{rousseeuw1993alternatives} of at most \(\max(10\%\text{ of median},f)\), where \(f=0.025\) ms for a task footprint at most 24 bytes with median below 0.050 ms and \(0.005\) ms otherwise.
 
-For each workload and each of six repeat blocks, all six treatments execute once. Across the blocks, a six-sequence Williams design~\citep{williams1949designs} places every treatment in every order position once and every distinct directed first-order adjacency once. Thus the \(5\times6\times6=180\) observations are balanced within workload for additive block, position, and first-order carryover effects. Each block shares one fresh GPU-0 calibration across its six treatments. The estimator discards reservation 0, takes the median of reservations 1--9, requires at least 7/9 samples within \(\max(25\%\text{ of median},f)\), and requires the Gaussian-consistent scale estimate \(1.4826\,\mathrm{MAD}\)~\citep{rousseeuw1993alternatives} to be no greater than \(\max(10\%\text{ of median},f)\), where \(f=0.025\) ms only for a task footprint at most 24 bytes and median below 0.050 ms, and \(0.005\) ms otherwise. The first reservation attempt stopped before performance because one CG task key supplied only 6/9 inliers; no threshold was relaxed and no performance output was inspected. The fresh retry reported here passed the frozen rule.
+Performance runs record only aggregate scheduler summaries, with per-task tracing disabled. Every execution passes fail-closed checks for the Williams plan, hardware identity, fresh calibration, build and mechanism provenance, correctness, deterministic placement/copy/checksum outputs, and H/I identity. A source-distinct historical block additionally runs H, P, and N on Cholesky and LU in fixed order for five repeats (30 executions) under the same estimator; we report it as supporting replication kept separate from the counterbalanced matrix.
 
-Performance runs disable per-task copy, decision, comparator-shadow, and runtime-transfer tracing; only aggregate scheduler summaries remain enabled. All 180 executions pass fail-closed checks for the exact Williams plan, hardware identity, fresh calibration, raw-log linkage, build and mechanism provenance, correctness, deterministic placement/copy/checksum outputs, H/I identity, and publication-manifest coverage. Performance direction and the scheduler-share target are reported outcomes, never qualification gates.
+\subsection{Metrics and Statistics}\label{sec:metrics-statistics}
 
-A source-distinct historical block contains H, P, and N on Cholesky and LU in fixed H--P--N order for five repeats (30 executions). It used the same strict 7/9 calibration rule and passed its contemporaneous fail-closed checks. We retain it only as supporting replication; its timings are neither pooled with nor preferred over the counterbalanced matrix.
+The primary metrics are the benchmark interval, within-block latency ratios, scheduler-modeled input-copy bytes, and the deterministic placement digest. Following normalized-benchmark practice~\citep{fleming1986geomean}, the headline for each comparison is the geometric mean of six within-block ratios, given with ranges and direction counts as descriptive statistics rather than population intervals. The Williams balance removes aliasing with additive block, position, and first-order carryover terms on log latency. Because copy bytes and time are model outputs, identical placement digests and modeled-copy totals imply that any residual timing difference reflects scheduler-path and system variation rather than a locality decision.
 
-\subsection{Metrics and statistics}\label{metrics-and-statistics}
+For different-placement observations, a paired geometric-mean speedup of at least 1.03\(\times\) is material, 0.97--1.03\(\times\) neutral, and below 0.97\(\times\) a regression; these thresholds were fixed before the results were read. Modeled-copy reduction relative to HEFT is reported separately as a mechanism signal. Identical-placement rows are timing controls and receive no algorithmic label.
 
-We report the benchmark interval, within-block latency ratios, scheduler-modeled input-copy bytes, and deterministic placement digest. Following standard normalized-benchmark practice~\citep{fleming1986geomean}, the headline for each workload/comparison is the geometric mean of six within-block ratios, with descriptive ranges and direction counts; six blocks do not justify a population confidence interval. The Williams balance removes aliasing with additive block, position, and first-order carryover terms on log latency, but not higher-order drift or scheduler-path cost. When variants have identical placement digests and modeled-copy totals, their timing difference cannot be a locality-placement effect. Copy bytes/time are model outputs, not physical-link measurements.
+The prefix gate is classified by a paired P--N comparison. P materially protects against gate removal when the geomean of \(T_N/T_P\) is at least 1.03, N shows a material conservative cost when the geomean of \(T_P/T_N\) is at least 1.03, and the gate is otherwise neutral. A materially better P together with greater N copy reduction or positive N prefix damage is an over-optimization case, and a materially better N together with greater copy reduction is a conservative gate cost.
 
-For different-placement observations, the interpretation frozen before reading the unified results calls a paired geomean speedup of at least 1.03x material, at least 0.97x but below 1.03x neutral, and below 0.97x a reported regression. Problem opportunity is an independent mechanism signal: a positive reduction in scheduler-modeled copy bytes relative to HEFT. The thresholds are not applied as causal labels to identical-placement rows; those rows are timing controls regardless of their ratio.
+Scheduler share is the summed per-task scheduler decision time divided by the benchmark interval, computed identically for HEFT. We report absolute scheduler time per task alongside the ratio against a predeclared 5\% engineering target for this prototype.
 
-We classify the prefix gate itself with a direct paired P--N comparison, independently of P--H opportunity. P materially protects against gate removal when the geomean of \(T_N/T_P\) is at least 1.03; N exposes a material conservative cost when the geomean of \(T_P/T_N\) is at least 1.03; otherwise the gate effect is neutral. A materially better P together with greater N copy reduction or positive N prefix damage is an over-optimization counterexample. A materially better N together with greater copy reduction is reported as conservative gate cost rather than suppressed as a failed benchmark.
+\subsection{Identity and Timing Controls}\label{sec:identity-controls}
 
-Scheduler share is the sum of measured per-task scheduler decision time divided by the benchmark interval. It is not automatically critical-path slowdown. Our predeclared 5\% target is an engineering target for this prototype, not a community deployability standard. Absolute scheduler milliseconds and microseconds per task are reported alongside the ratio, and HEFT is evaluated by the same definition.
-
-\subsection{Control validity}\label{fail-closed-identity-boundary}
-
-I exactly reproduces H task and dependency-check counts, placement digest, modeled-copy accounting, scheduler-context count, and correctness checksum for all 30 workload--block pairs. Its I/H geomeans are 1.024x (FDTD), 1.001x (CG), 1.035x (Cholesky), 1.018x (LU), and 1.000x (MiniWeather). These nonzero same-decision differences quantify scheduler-path and residual system effects; in particular, Cholesky crosses the 1.03x threshold without changing placement. Independently, H/P/N are placement- and copy-identical on FDTD, CG, and MiniWeather. We consequently apply algorithmic labels only when the compared mechanism outputs differ.
-
-\section{Results}\label{results}
-
-\subsection{Primary counterbalanced matrix}\label{primary-problem-boundary-matrix}
+The identity control verifies that the implementation-only variant (I) reproduces the HEFT baseline (H) exactly. Across all 30 workload--block pairs, H and I produce identical task and dependency-check counts, placement digests, modeled-copy accounting, scheduler-context counts, and correctness checksums. Consequently, the I/H timing ratio isolates scheduler-path and residual system effects rather than algorithmic differences: 1.024\(\times\) (FDTD), 1.001\(\times\) (CG), 1.035\(\times\) (Cholesky), 1.018\(\times\) (LU), and 1.000\(\times\) (MiniWeather). Cholesky exceeds the 1.03\(\times\) materiality threshold despite identical placements, illustrating that scheduler-path overhead alone can occasionally reach the materiality threshold. Because H, P, and N produce identical placements and modeled-copy totals on FDTD, CG, and MiniWeather, algorithmic conclusions are drawn only from comparisons that produce different mechanism outputs.
 
 \input{figures/counterbalanced_reviewer_table.tex}
+
+\subsection{Ablation and Instrumentation}\label{sec:ablation}
+
+The no-prefix ablation (N) is the experimental control that isolates the prefix gate. Source-matched to prefix-safe, it retains the same HEFT baseline, candidate set, copy and queue gains, thresholds, score, and tie-breaks and disables only the prefix admission rule, so a P--N comparison attributes any difference to the gate alone. The scheduler parameters \(K_{\min}=Q_{\min}=0.001\) ms, the copy-gain threshold \(\tau\) (0.25 for \(c(v)>0.60\) and 0.15 otherwise), and \(\lambda_Q=0.35\) follow the prior placement layer~\citep{chengli2026multiobjective} and are shared by every workload. Each placement decision logs the accepted copy saving, the HEFT-relative EFT damage, and the prefix damage, and verification requires the aggregate prefix damage to be zero within numerical tolerance.
+
+\subsection{Diagnostic Certificate}\label{sec:diagnostic-certificate}
+
+The successor-aware locality certificate (SALC) is a diagnostic applied only during evaluation; the runtime scheduler makes no successor prediction. It characterizes an opportunity that prefix safety cannot exploit---a device whose current EFT extends \(P_b\) even though one known future copy is much larger---for the graph-visible case in which a successor is fixed to a device.
+
+For producer \(v\), SALC identifies write-like output symbols read by direct successors. If successor \(u\) is explicitly fixed to GPU \(a(u)\), that GPU is an authoritative anchor. For a hypothetical producer device \(d\), a conservative one-hop modeled copy quantity is
+\[
+\Phi_1(d)=
+\sum_{(x,a)\in U}
+\mathbf{1}[d\ne a]\frac{\operatorname{bytes}(x)}{B},
+\]
+where \(U\) deduplicates output-symbol/anchor pairs. For HEFT baseline \(b\) and alternative \(d\), SALC computes
+\[
+G_{\mathrm{future}}(d)=\Phi_1(b)-\Phi_1(d),
+\qquad
+\Delta_F(d)=\max\{0,F(d)-F(b)\},
+\]
+and accepts only when
+\[
+C_{\mathrm{SALC}}(d)=G_{\mathrm{future}}(d)-\Delta_F(d)>\mu,
+\]
+for margin \(\mu\) (zero in the controlled certificate). SALC selects the positive candidate with the largest certificate, breaking ties by EFT.
+
+The inequality is a certificate only when the producer creates the unique relevant version, the fixed successor reads that same version, and no intervening task overwrites it. It certifies a modeled one-hop edge risk, and the positive evidence reported here is the authoritative fixed-successor case.
+
+\section{Evaluation}\label{sec:evaluation}
+
+This section evaluates prefix-safe placement on the counterbalanced five-workload matrix, covering its performance under placement--residency opportunities, its reproducibility and copy-model sensitivity, its scheduler overhead, and a controlled validation of the migrate--return mechanism.
+
+\subsection{Primary Results}\label{sec:primary-results}
+
+This experiment asks whether prefix-safe placement (P) improves performance when a placement--residency opportunity is present. Among the five workloads, P departs from the HEFT baseline (H) only on Cholesky and LU (Table~\ref{tab:primary-matrix}, Figure~\ref{fig:primary-results}); the other three retain H's placement and act as timing controls.
+
+On the two opportunity workloads, P reduces scheduler-modeled copy by 81.0\% on Cholesky (128.55 to 24.41 GB) and 38.8\% on LU (148.77 to 90.98 GB), and improves latency over H by 1.313\(\times\) (1.296--1.324\(\times\)) and 1.177\(\times\) (1.171--1.186\(\times\)), with all six within-block pairs agreeing in direction. Across the evaluated opportunity workloads, reductions in scheduler-modeled copy consistently translate into latency improvements.
+
+Bounded admission, rather than copy weighting alone, drives this improvement. P models less copy than the weighted baseline (W) and the owner baseline (O) on both opportunity workloads, and is materially faster than W and O on Cholesky and than O on LU; its 1.020\(\times\) edge over W on LU is competitive, below the 1.03\(\times\) materiality threshold. On CG, W changes the placement yet leaves modeled copy at 42.95 GB and runs 1.841\(\times\) slower than P, showing that unbounded copy weighting fails to capture the same locality.
+
+\emph{Timing controls.} The three unchanged workloads bound the timing noise present in the effective comparisons. FDTD, CG, and MiniWeather produce identical H, P, and no-prefix (N) placement digests and modeled-copy totals, so their P/H ratios measure scheduler-path and system variation alone, and FDTD and MiniWeather are identical across all six variants. FDTD's P/H ratios span 0.801--1.157\(\times\) under identical decisions, which quantifies the timing noise of its short benchmark interval.
+
+\emph{Gate removal.} Removing the prefix gate (N) exposes both sides of the safety--opportunity trade-off. On Cholesky, N is 1.161\(\times\) faster than P across all six pairs and lowers modeled copy to 5.90 GB. On LU, P is instead 1.210\(\times\) faster than N across all six pairs, and N accumulates 732.3 ms of modeled-prefix damage while lowering modeled copy to 3.88 GB. The same admission rule rejects an aggressive placement on Cholesky while preventing a harmful one on LU, illustrating the intended condition-dependent behavior.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.88\textwidth]{figures/primary_counterbalanced_results.pdf}
 \Description{All six paired prefix-safe over HEFT ratios for five workloads and their geometric means, alongside median scheduler-modeled copy totals. Cholesky and LU have different placements, lower modeled copy, and speedups above one. FDTD, CG, and MiniWeather are identical-placement timing controls.}
-\caption{Primary five-workload P/H evidence. (a) Six within-block ratios and geometric means; filled/open points denote different-/identical-placement cases. (b) Median modeled copy; values are not physical traffic.}\label{fig:primary-counterbalanced-results}
+\caption{Primary five-workload P/H evidence. (a) Six within-block ratios and geometric means; filled/open points denote different-/identical-placement cases. (b) Median modeled copy; values are not physical traffic.}
+\label{fig:primary-results}
 \end{figure*}
 
-Table~\ref{tab:counterbalanced-baselines}(a) reports all five workloads and all four P-relative comparisons, rather than showing only the effective cases; Figure~\ref{fig:primary-counterbalanced-results} exposes the six individual P/H pairs and the associated copy totals. P changes H's placement only on Cholesky and LU. It reduces scheduler-modeled copy from 128.55 to 24.41 GB on Cholesky (81.0\%) and from 148.77 to 90.98 GB on LU (38.8\%). The corresponding P/H speedups are 1.313x (range 1.296--1.324x) and 1.177x (1.171--1.186x); all six pairs agree in each case. This is positive evidence for the remedy when a prefix-admissible HEFT--MSI opportunity is observed, not a prevalence claim about the two benchmark names.
+\subsection{Reproducibility}\label{sec:reproducibility}
 
-The simpler locality baselines do not explain away the result. P materially outperforms W and O on Cholesky and O on LU. Its 1.020x LU advantage over W is below the frozen 1.03x threshold and is therefore competitive rather than material. P also models less copy than either baseline in both cases. Conversely, W changes CG placement without reducing its 42.95 GB modeled copy and is 1.841x slower than P, showing why indiscriminate copy weighting is not a sufficient substitute for bounded admission.
+This replication asks whether the primary directions reproduce on an independently prepared benchmark block. The source-distinct 30-run block is summarized in Table~\ref{tab:replication}.
 
-\paragraph{Unchanged-placement controls.}
-FDTD, CG, and MiniWeather have identical H/P/N placement digests and modeled-copy totals; their parenthesized ratios in Table~\ref{tab:counterbalanced-baselines}(a) are therefore timing controls, not locality effects. FDTD and MiniWeather are identical across all six treatments. On CG, W alone changes placement, yet leaves modeled copy at 42.95 GB and is 1.841x slower than P. FDTD's six P/H ratios span 0.801--1.157x despite identical decisions, exposing the instability of this short interval. We therefore make neither locality-speedup nor universal non-regression claims from the parenthesized observations.
+\input{figures/replication_table.tex}
 
-Exact gate removal separates conservative cost from protection. On Cholesky, P/N is 0.861x, so N is 1.161x faster in all six pairs and reduces modeled copy further to 5.90 GB; the gate is conservative in this observation. On LU, P/N is 1.210x in all six pairs even though N reduces modeled copy to 3.88 GB and accumulates 732.3 ms of modeled-prefix damage. LU is therefore an over-optimization counterexample. The same benchmark-independent predicate can reject a profitable aggressive choice in one state distribution and a harmful one in another; this is the intended condition-dependent boundary.
+The two blocks agree closely. The replicated P/H geometric means differ from the primary estimates by 0.002\(\times\) on Cholesky and 0.006\(\times\) on LU, and the copy reductions by 0.1 and 0.6 percentage points; the opposite P/N outcomes also recur, with gate removal helping Cholesky and prefix safety protecting LU, and all five replication pairs agreeing in direction. Prepared from a separate source revision and passing the same provenance, correctness, calibration, and determinism checks, these results confirm that the primary observations are reproducible under an independently prepared benchmark block.
 
-\subsection{Historical strong-opportunity replication}\label{clean-fresh-calibration-repeated-gate-isolation}
+\subsection{Copy-model Sensitivity}\label{sec:copy-sensitivity}
 
-Table~\ref{tab:counterbalanced-baselines}(b) places the source-distinct 30-run block beside the primary results; the two blocks are not pooled. The replicated P/H geomeans differ from the primary estimates by only 0.002x on Cholesky and 0.006x on LU, while copy reductions differ by 0.1 and 0.6 percentage points. The opposite P/N outcomes also repeat: exact gate removal helps Cholesky, whereas P protects LU. All five replication pairs agree in each displayed direction. The block passes provenance, completeness, correctness, calibration, and deterministic-mechanism checks. Its agreement is corroborative; the counterbalanced matrix closes its fixed-order threat and adds repeated locality baselines.
+This sensitivity study examines whether the gate-removal outcomes depend on the scheduler's single copy-model parameter. Holding the frozen comparison fixed, we swept the modeled copy bandwidth across 10.35, 20.7, and 41.4 GB/s (Figure~\ref{fig:copy-sensitivity}).
 
-\subsection{One-run copy-model sensitivity}\label{semantic-bridge-and-one-run-sensitivity-diagnostics}
-
-After freezing the exact gate-only comparison, we varied only the scheduler's scalar copy parameter over 10.35, 20.7, and 41.4 GB/s. Each point in Figure~\ref{fig:prefix-gate-sensitivity} is one diagnostic observation with no uncertainty estimate; the values are model sensitivity, not measurements at three physical link bandwidths.
+The conservative-versus-protective split between the two workloads persists across all three settings. On Cholesky, both P and N stay faster than H (P 1.282--1.296\(\times\), N 1.509--1.540\(\times\)); on LU, P stays faster than H (1.153--1.173\(\times\)) while N stays below it (0.983--0.989\(\times\)). Each configuration is a single run, so the sweep establishes the persistence of this split across the modeled bandwidth range.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.90\textwidth]{figures/prefix_gate_ablation.pdf}
-\Description{Prefix-safe versus exact gate removal at three scheduler copy-model bandwidths. Points are one-run diagnostics with no uncertainty estimate; dashed segments connect configurations that differ only in the prefix admission rule. LU exposes the protected-risk case, while Cholesky exposes the gate's conservative cost.}
-\caption{Prefix-safe versus exact gate removal at three scheduler copy-model bandwidths. Dashed segments connect configurations differing only in prefix admission. Each point is a one-run diagnostic.}\label{fig:prefix-gate-sensitivity}
+\Description{Prefix-safe versus exact gate removal at three scheduler copy-model bandwidths. Points are one-run diagnostics with no uncertainty estimate; dashed segments connect configurations that differ only in the prefix admission rule.}
+\caption{Prefix-safe (P) versus no-prefix (N) at three scheduler copy-model bandwidths. Dashed segments connect configurations differing only in prefix admission. Each point is a one-run diagnostic.}
+\label{fig:copy-sensitivity}
 \end{figure*}
 
-Across the three model values, Cholesky prefix-safe remains 1.282--1.296x faster than HEFT and no-prefix remains 1.509--1.540x faster. LU prefix-safe remains 1.153--1.173x faster, whereas no-prefix remains below HEFT at 0.983--0.989x. This qualitative persistence supports, but does not statistically establish, the mixed risk-control interpretation.
+\subsection{Scheduler Overhead}\label{sec:scheduler-overhead}
 
-\subsection{Scheduler cost and excluded evidence}\label{negative-findings-determine-the-verdict}
+This measurement quantifies the scheduler's decision cost as a share of end-to-end runtime. The overhead is workload-dependent, set by the length of the benchmark interval rather than by the prefix gate, so dense workloads with short intervals carry the highest share.
+
+The measured group medians are consistent with this observation. Of the thirty workload--scheduler group medians (Table~\ref{tab:scheduler-cost}), eleven meet the predeclared 5\% target and nineteen exceed it: all six CG groups and five of six MiniWeather groups meet it, whereas every FDTD, Cholesky, and LU group exceeds it. P adds 7.55--16.70 \(\mu\)s per task and its total scheduler time is lower than H on every workload, yet the share still exceeds target on the latency-improved dense workloads, and the historical block shows the same behavior.
 
 \input{figures/scheduler_cost_table.tex}
 
-Table~\ref{tab:scheduler-cost} exposes all thirty workload--scheduler group medians. Eleven meet our predeclared 5\% scheduler-share target and nineteen miss it. All six CG groups meet it; five of six MiniWeather groups meet it, with H the exception. Every group median for FDTD, Cholesky, and LU is above target. P's measured scheduling cost is 7.55--16.70 \(\mu\)s per task and its total measured scheduler time is lower than H on every workload, but short benchmark intervals and improved dense-workload latency can still leave the ratio above target. The result is workload-dependent prototype cost, not universal incremental overhead caused by the prefix gate, and these measurements do not localize the cause. All six historical group medians also miss the target.
+\subsection{Excluded Measurements}\label{sec:excluded}
 
-An older source snapshot supplies secondary baseline and neutral-MiniWeather context, while a one-run compatibility bridge verifies deterministic comparator semantics. Their calibration and binaries differ from the clean experiment, so none of their timings are pooled or used as headline performance. Standard-CG performance from the historical same-path block is excluded because its identity control failed. We also exclude a dense-DAG transfer diagnostic whose raw logs were not archived and a MiniWeather SALC diagnostic without verifiable source provenance.
+We report only measurements that pass the identity and provenance controls. Standard-CG performance from the historical same-path block is excluded for a failed identity control; a dense-DAG transfer diagnostic and a MiniWeather fixed-successor diagnostic are excluded for missing raw logs and source provenance; and an older source snapshot serves only as secondary baseline and compatibility context. A one-read--write/unique-owner restriction reproduces the broad method's placements on every task of the two dense workloads, confirming that prefix-safe applies as a general locality refinement rather than a dense-DAG special case.
 
-Finally, a one-read--write/unique-owner restriction covers every task in the two dense observations and produces the same placements as the broad method. It therefore does not identify chains; prefix-safe remains a general locality refinement rather than a dense-DAG special case.
+\subsection{Mechanism Validation: Controlled Migrate--Return Trace}\label{sec:mechanism-validation}
 
-\section{Limitations and Threats to Validity}\label{limitations-and-threats-to-validity}
+This experiment validates the migrate--return mechanism of Section~\ref{sec:motivation} on a controlled trace, using the fixed-successor certificate of Section~\ref{sec:diagnostic-certificate}. The trace initializes a 128 MiB mutable version on GPU 0. Under H, the read--write task 46 (\texttt{cg\_axpy}) runs on GPU 1, and a \texttt{cg\_dot} successor fixed to GPU 0 copies the produced data back---a direction repeated by five later fixed reads.
 
-\textbf{Guarantee.} Prefix safety constrains only the modeled finish of placement decisions committed so far. SALC certifies one fixed-successor modeled inequality under a same-version/no-overwrite condition. Neither mechanism bounds an unscheduled suffix, proves global makespan improvement, or identifies a critical path.
+The certificate keeps task 46 owner-local. Its one-copy future lower bound of 6.483948 ms outweighs 0.474260 ms of HEFT-relative EFT damage, for a certificate value of 6.009688 ms. Replaying the recorded H decisions against this single intervention shows 28 placement differences: the direct task and 27 downstream cascade changes.
 
-\textbf{Problem coverage, selection, and arrival model.} The admission rule is defined independently of workload identity but addresses only prefix-admissible conflicts. The five-workload matrix distinguishes two effective modeled-copy-opportunity cases from three identical-placement controls; it estimates neither general conflict prevalence nor how often a conflict has enough frontier slack to be admissible. The two strongest configurations were selected after one-run exploration, so their repeated results establish behavior under observed opportunity rather than an unbiased frequency. The repeated DAGs are fully materialized before deferred submission. Decisions are still made one task at a time, but the evaluation does not validate dynamic task arrival, and the diagnostic fixed-successor case relies on graph-visible information. Results come from one 8-L4 node, one size per workload, and six blocks.
+\input{figures/controlled_trace_table.tex}
 
-\textbf{Statistics and baselines.} The Williams design closes the fixed-order alias in the earlier block and balances additive block, position, and first-order carryover effects within each workload. Six blocks remain descriptive, not independent evidence for a broad workload population, and higher-order thermal or system drift can remain. I shows that code-path timing can cross the materiality threshold without a placement change. W and O are deliberately simple, reproducible locality comparators; integrating a mature external runtime scheduler would require a different task/data interface and remains future work. We therefore claim condition-specific improvement over this runtime's HEFT-style selector and these two internal baselines, not state-of-the-art dominance.
+The intervention eliminates the predicted return traffic. Target peer traffic falls to zero, total peer traffic drops from 2.50 GiB to 480 B of unrelated scalar traffic, and all runtime-issued traffic falls from 4.25 GiB to 896 MiB (79.41\%), with correctness preserved (Table~\ref{tab:controlled-trace}, Figure~\ref{fig:controlled-trace}). The trace reproduces the migrate--return cascade under H and shows that one owner-local placement removes it. Attribution rests on matching task and data identity across the fixed-successor interval, which links each avoided transfer to the single intervened placement.
 
-\textbf{Copy and memory model.} One 20.7 GB/s scalar and GPU-0 task-cost calibration are shared across identical L4s. The model omits pairwise NODE/SYS bandwidth differences, contention, overlap, memory capacity, and eviction. Modeled bytes/time are not physical PCIe traffic, and the results do not cover oversubscription or out-of-core execution.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.94\textwidth]{figures/controlled_cg_chain_certificate.pdf}
+\Description{Controlled CG migrate--return trace. HEFT moves a 128 MiB mutable version from its owner on GPU 0 to task 46 on GPU 1, then six fixed-device reads return it. The fixed-successor SALC certificate keeps task 46 owner-local.}
+\caption{Controlled CG migrate--return certificate. HEFT moves the 128 MiB version away from its owner; six fixed-device reads return it. SALC's one-hop certificate keeps task 46 owner-local. Attribution follows the join of task and data identity across the fixed-successor interval.}
+\label{fig:controlled-trace}
+\end{figure*}
 
-\textbf{Traffic attribution.} Runtime-issued transfer accounting validates CUDASTF copy requests, not bus transactions. The controlled CG trace has no independent runtime version epoch, so its seven attributed requests are conditional on the task/data/fixed-successor join. Device-level copy activity and timing would require CUPTI activity tracing or an equivalent profiler~\citep{nvidia2026cupti}; such records still do not by themselves establish physical PCIe/NVLink link traffic.
+\section{Related Work}\label{sec:related-work}
 
-\textbf{Scheduler cost.} Nineteen of thirty primary group medians and all six historical group medians miss our predeclared share target, while CG demonstrates that the target can be met for all variants and repeats. The measurements do not isolate whether candidate evaluation, residency bookkeeping, task granularity, or other scheduler work dominates; lower-overhead implementation and broader validation remain future work.
+\textbf{HEFT and bounded lookahead.} HEFT places each task on the processor of minimum earliest finish time, accounting for the communication that delays its inputs~\citep{topcuoglu2002heft}, and later work enriches this decision with information about the future graph. PEFT adds an optimistic future-cost table~\citep{arabnejad2014peft}, lookahead HEFT evaluates a placement's effect on child tasks~\citep{bittencourt2010lookahead}, and interference-aware scheduling jointly models computation- and I/O-induced flows when constraining placement~\citep{bleuse2018anticipation}. These methods improve placement by predicting or searching the unscheduled graph. Unlike these approaches, prefix-safe placement refines the current HEFT decision rather than predicting future task behavior. It admits a lower-copy candidate device only when the resulting placement remains within a bounded tolerance of the modeled completion of already committed work.
 
-\section{Related Work}\label{related-work}
+\textbf{Task runtimes and locality-aware scheduling.} Task-based runtimes couple placement with data movement, and a broad line of work makes that coupling locality-aware. StarPU's data-aware scheduler combines software-managed shared memory with transfer-aware placement~\citep{augonnet2010dataaware,augonnet2011starpu}, while PaRSEC~\citep{bosilca2013parsec}, Legion~\citep{bauer2012legion}, and CUDASTF~\citep{augonnet2024cudastf} expose abstractions for dependencies, placement, and data management. On top of such runtimes, XKaapi's DADA schedules by data affinity~\citep{bleuse2014dada}, LAHeteroprio quantifies locality's effect on task-based performance~\citep{bramas2019lahp}, MCL selects resources by locality~\citep{kamatar2020locality}, and comparative studies place HEFT beside data- and locality-aware multi-CPU/multi-GPU schedulers~\citep{lima2015strategies}. More recent systems optimize locality under GPU-memory limits~\citep{gonthier2023taming}, combine ready-task locality with eviction for GPU and out-of-core linear algebra~\citep{gonthier2025darts}, and rebalance already-mapped work across GPUs~\citep{john2024multigpu}. These schedulers pursue locality through affinity heuristics, resource selection, or work migration. Unlike these schedulers, our work does not replace the underlying placement policy. Instead, it refines the HEFT decision by admitting lower-copy alternatives only when they preserve the modeled completion of already committed work.
 
-\textbf{HEFT and bounded lookahead.} HEFT ranks a heterogeneous DAG and selects the processor that minimizes the current task's EFT, including communication that affects current input readiness \citep{topcuoglu2002heft}. PEFT augments this family with an optimistic future-cost table \citep{arabnejad2014peft}, while lookahead HEFT explicitly evaluates a placement's effect on child tasks \citep{bittencourt2010lookahead}. Interference-aware scheduling has also modeled computation-induced and I/O flows jointly when constraining task placement~\citep{bleuse2018anticipation}. SALC is closest in spirit to one-hop lookahead, but its present certificate is narrower: one graph-visible fixed-device successor, runtime residency, and a HEFT-relative damage bound. Prefix-safe scheduling makes no successor prediction at all; it is a bounded online residual around the current HEFT choice.
+\textbf{Transfer attribution.} Attributing GPU data movement to program context is usually a profiling task; HPCToolkit, for instance, attributes kernels and copies to heterogeneous calling contexts~\citep{zhou2021hpctoolkit}. Our runtime-issued transfer stream adds a complementary, decision-level view: it links each requested peer transfer to the scheduler decision and logical-data identity that produced it, connecting a placement choice directly to the data movement it induces.
 
-\textbf{Task runtimes and locality-aware scheduling.} StarPU's early data-aware scheduler combined software-managed shared memory with transfer-aware placement \citep{augonnet2010dataaware,augonnet2011starpu}; PaRSEC \citep{bosilca2013parsec}, Legion \citep{bauer2012legion}, and CUDASTF \citep{augonnet2024cudastf} expose other abstractions for dependencies, placement, and data management. PaRSEC has also been extended to rebalance already mapped work between GPUs~\citep{john2024multigpu}, whereas our placements are irrevocable. XKaapi's DADA scheduler uses data affinity \citep{bleuse2014dada}, LAHeteroprio studies how locality changes task-based performance \citep{bramas2019lahp}, and MCL uses locality-aware resource selection in a heterogeneous runtime \citep{kamatar2020locality}. Comparisons have also evaluated HEFT alongside data- and locality-aware multi-CPU/multi-GPU schedulers \citep{lima2015strategies}. Recent work formalizes locality scheduling under GPU-memory constraints \citep{gonthier2023taming}, and DARTS combines ready-task locality with an eviction policy informed by a limited view of tasks assigned to each processing unit for GPU and out-of-core linear algebra \citep{gonthier2025darts}. We therefore do not claim first data-aware scheduling. Our narrower contribution is an enforceable, time-shift-invariant admission gate around a HEFT-style per-task selector, paired with exact gate removal and explicit identity-placement controls.
+\section{Limitations}\label{sec:limitations}
 
-\textbf{Transfer attribution.} HPCToolkit attributes GPU kernels and copies to heterogeneous calling contexts \citep{zhou2021hpctoolkit}. Our runtime-issued transfer stream serves a different diagnostic purpose: it joins scheduler decisions and logical-data identities to requested peer transfers. It does not replace a profiler and cannot establish physical PCIe transactions, overlap, or link time.
+\textbf{Guarantee.} Prefix-safe placement constrains only the modeled completion of work that has already been committed. It does not predict future task placements, identify critical paths, or guarantee globally optimal makespan or communication. The scheduler therefore provides a bounded refinement of the current HEFT decision rather than a global optimization procedure.
 
-\section{Conclusion}\label{conclusion}
+\textbf{Evaluation scope.} The admission rule is defined independently of workload identity, but the present evaluation is limited to the workloads, platform, and runtime studied here. The five-workload matrix demonstrates the scheduler's behavior in both placement--residency opportunity cases and identical-placement controls, but it does not estimate the prevalence of such opportunities in broader applications. The experiments further assume deferred task submission on a homogeneous eight-GPU node and do not evaluate dynamic task arrival, heterogeneous devices, or comparisons with external runtime schedulers.
 
-A current-task EFT optimum can be a poor residency decision when a read--write placement moves the only valid version away from a future consumer. Prefix-safe copy-aware placement is a benchmark-independent admission rule for the prefix-admissible subclass of this conflict in CUDASTF's HEFT-style selector: it accepts lower-copy placements only within numerical tolerance of the current modeled-prefix finish bound and deliberately leaves other conflicts unchanged. In the qualified 180-run Williams matrix, it reduces modeled copy and improves latency in all twelve H-relative pairs across the two different-placement cases. On Cholesky it materially beats both transparent locality baselines; on LU it materially beats the owner baseline and is competitive with the global weighted baseline. H, P, and N produce identical placement digests on the other three workloads; their timing differences are controls rather than locality speedups or non-regression evidence.
+\textbf{Implementation and measurement.} The prototype uses a simplified transfer-cost model: a single effective bandwidth and a shared GPU-0 task-cost calibration, omitting pairwise NODE/SYS bandwidth differences, contention, copy--compute overlap, and memory-capacity effects such as eviction. The reported copy quantities are therefore scheduler-model outputs rather than profiler-measured device traffic, and the controlled-trace attribution rests on the task/data/fixed-successor join rather than an independent runtime version epoch; confirming physical PCIe/NVLink traffic would require CUPTI activity tracing or an equivalent profiler~\citep{nvidia2026cupti}. The implementation also prioritizes clarity over scheduler efficiency, leaving lower scheduler overhead and validation on larger systems and broader workloads as future work.
 
-Exact gate removal exposes conservative cost on Cholesky, while prefix-safe beats no-prefix by 1.210x on LU despite no-prefix removing substantially more modeled copy and accumulating modeled-prefix damage. The result supports a condition-dependent risk control: the method is general, while the existence and profitability of a corrective deviation are properties of the observed task/residency state. A separate fixed-successor diagnostic conditionally eliminates seven attributed peer-copy requests and is followed by 27 downstream placement changes; it validates the constructed one-hop mechanism, not complete chain discovery or end-to-end causality.
+\section{Conclusion}\label{sec:conclusion}
 
-Nineteen of thirty primary group medians miss our predeclared 5\% scheduler-share target, although all CG executions meet it. The present contribution is therefore an enforceable admission contract with condition-specific positive evidence and a prototype-level deployment limitation. Broader systems and scales, independently selected conditions, dynamic arrival, external runtime baselines, physical transfer profiling, and lower scheduler cost are required before any universal performance claim.
-
-\section*{Artifact Availability}\label{artifact-pointers}
-
-The implementation, harnesses, 180-run counterbalanced primary matrix, historical 30-run supporting block, raw qualified results, generated interpretation tables, and fail-closed verification scripts are preserved together. A machine-readable manifest records exact source and result revisions while keeping primary timings separate from instrumented forensic and provenance-incomplete diagnostics. The working repository is presently access-controlled, so a reviewer-accessible archival URL must replace this sentence before submission.
-
+Task placement in multi-GPU task-graph runtimes influences both execution time and future data residency. This paper identifies the resulting placement--residency conflict: although HEFT-style scheduling minimizes the modeled finish time of the current task, the selected placement may increase the communication required by later dependent tasks. To address this problem, we present prefix-safe copy-aware placement, a lightweight refinement of HEFT that evaluates lower-copy alternatives relative to the HEFT baseline and admits them only when they remain within a bounded tolerance of the modeled completion of already committed work. A prototype implementation in CUDASTF demonstrates that this bounded refinement consistently exploits placement--residency opportunities without changing HEFT behavior when no admissible opportunity exists. Across the qualified counterbalanced evaluation, the proposed scheduler reduces scheduler-modeled copy and improves performance on the workloads where placement changes occur, while the gate-removal ablation shows that copy reduction alone is insufficient and that the benefit of deviating from the HEFT baseline depends on the observed runtime state. The current implementation is limited to the workloads and platform evaluated in this study, and extending the approach to broader runtime environments, independently selected workloads, dynamic task arrival, external runtime baselines, and lower scheduler overhead remains future work. Nevertheless, the results show that bounded HEFT-relative locality refinement provides a practical mechanism for improving data locality while preserving the performance robustness of HEFT.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
-% Absorb balance.sty's sub-baseline rounding on the short final page.
-\par\kern2.4pt
 \end{document}
